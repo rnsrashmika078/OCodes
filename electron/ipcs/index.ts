@@ -1,9 +1,9 @@
 import { ipcMain, dialog } from "electron";
 import { mkdirSync, readdirSync, statSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
-import chokidar from "chokidar";
-import path from "path";
+import { readFileSync } from "fs";
 
+//import a project or folder
 export function registerFileSystemHandlers() {
   ipcMain.handle("pick-project", async () => {
     const result = await dialog.showOpenDialog({
@@ -19,19 +19,33 @@ export function registerFileSystemHandlers() {
         const filePath = join(dir, name);
         const stats = statSync(filePath);
         return stats.isDirectory()
-          ? { type: "folder", name, children: readDirRecursive(filePath) }
-          : { type: "file", name };
+          ? {
+              type: "folder",
+              name,
+              path: filePath,
+              children: readDirRecursive(filePath),
+            }
+          : { type: "file", name, path: filePath };
       });
     }
+    console.log("📂 File path:", folderPath);
 
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
 }
 
-let watcher: chokidar.FSWatcher | null = null;
+//open a file
 
+ipcMain.handle("read-file", async (_event, filePath: string) => {
+  try {
+    const content = readFileSync(filePath, "utf-8");
+    return content;
+  } catch (err) {
+    console.error("Failed to read file:", err);
+    return null;
+  }
+});
 
- 
 ipcMain.handle(
   "create-component",
   async (_event, filepath: string, code: string) => {

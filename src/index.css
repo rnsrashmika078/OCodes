@@ -4,7 +4,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* @layer base {
+@layer base {
+  @layer base {
+    * {
+      @apply border-gray-600;
+    }
+  }
+  /*
   h1 {
     @apply text-3xl font-bold;
   }
@@ -14,9 +20,7 @@
   h3 {
     @apply text-xl  mt-0 font-semibold;
   }
-  p {
-    @apply leading-relaxed;
-  }
+ 
   ul {
     @apply list-disc pl-6 list-inside;
   }
@@ -32,7 +36,21 @@
   a {
     @apply text-blue-600 underline hover:text-blue-800;
   }
-} */
+    */
+}
+p {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 10px;
+}
+h1 {
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+}
+h2 {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 13px;
+}
+
 .custom-scrollbar-y {
   overflow-y: auto;
   scrollbar-width: thin; /* Firefox */
@@ -41,6 +59,11 @@
 .custom-scrollbar-x {
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #474747 #1e1e1e;
+}
+.custom-scrollbar{
+  overflow: auto;
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #474747 #1e1e1e;
 }

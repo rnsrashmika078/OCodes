@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Button from "../common/Button";
 import { PiChatCircleSlash } from "react-icons/pi";
-import ToolTip from "../common/ToolTip";
+import ToolTip from "../common/tooltip/ToolTip";
 import { MdOutlineToggleOff } from "react-icons/md";
 interface Props {
   toggleSidebar?: (state?: boolean) => void;

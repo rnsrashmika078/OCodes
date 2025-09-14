@@ -17,58 +17,7 @@ interface Props {
 }
 
 // Recursive FileTree component
-const FileTree = ({
-  nodes,
-  level = 0,
-  project,
-}: {
-  nodes: Tree[];
-  level?: number;
-  project?: FilePath | null;
-}) => {
-  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
-  const toggle = (idx: number) => {
-    setExpanded((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  return (
-    <div className={`space-y-1`}>
-      <p>{project?.path}</p>
-      {nodes.map((node, idx) => (
-        // @ts-expect-error:expect-error-here
-        <div key={idx}>
-          <p
-            className="flex items-center gap-1"
-            style={{ paddingLeft: level * 30 }}
-          >
-            {node.type === "folder" && (
-              <>
-                {expanded[idx] ? (
-                  <FaChevronDown
-                    className="inline-block"
-                    onClick={() => toggle(idx)}
-                  />
-                ) : (
-                  <FaChevronRight
-                    className="inline-block"
-                    onClick={() => toggle(idx)}
-                  />
-                )}
-                <span className="text-2xl">📂</span>
-              </>
-            )}
-            {node.type === "file" && <span className="text-lg">📄</span>}
-            {node.name}
-          </p>
-          {node.children && expanded[idx] && (
-            <FileTree nodes={node.children} level={level + 1} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const Sidebar = ({ toggleSidebar, isToggle }: Props) => {
   const authUser = useChatClone((store) => store.authUser);

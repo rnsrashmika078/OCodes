@@ -35,10 +35,13 @@ contextBridge.exposeInMainWorld("auth", {
 contextBridge.exposeInMainWorld("electronAPI", {
   initializeLLM: () => ipcRenderer.invoke("run-ollama"),
 });
+
+//file based bridge
 contextBridge.exposeInMainWorld("fsmodule", {
   create: (filepath: string, code: string) =>
     ipcRenderer.invoke("create-component", filepath, code),
   pickProject: () => ipcRenderer.invoke("pick-project"),
+  openFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
 });
 
 contextBridge.exposeInMainWorld("updater", {

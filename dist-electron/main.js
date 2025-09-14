@@ -12,7 +12,7 @@ var _validator, _encryptionKey, _options, _defaultValues;
 import require$$1$5, { ipcMain as ipcMain$1, dialog, app as app$1, BrowserWindow } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import require$$1$1, { mkdirSync, writeFileSync as writeFileSync$1, readdirSync, statSync } from "fs";
+import require$$1$1, { readFileSync, mkdirSync, writeFileSync as writeFileSync$1, readdirSync, statSync } from "fs";
 import require$$0$1 from "constants";
 import require$$0$2 from "stream";
 import require$$4$2 from "util";
@@ -2221,7 +2221,7 @@ function requireJsonfile$1() {
     return obj;
   }
   const readFile = universalify2.fromPromise(_readFile);
-  function readFileSync(file2, options = {}) {
+  function readFileSync2(file2, options = {}) {
     if (typeof options === "string") {
       options = { encoding: options };
     }
@@ -2253,7 +2253,7 @@ function requireJsonfile$1() {
   }
   jsonfile$1 = {
     readFile,
-    readFileSync,
+    readFileSync: readFileSync2,
     writeFile,
     writeFileSync: writeFileSync2
   };
@@ -29100,12 +29100,27 @@ function registerFileSystemHandlers() {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);
         const stats = statSync(filePath);
-        return stats.isDirectory() ? { type: "folder", name, children: readDirRecursive(filePath) } : { type: "file", name };
+        return stats.isDirectory() ? {
+          type: "folder",
+          name,
+          path: filePath,
+          children: readDirRecursive(filePath)
+        } : { type: "file", name, path: filePath };
       });
     }
+    console.log("📂 File path:", folderPath);
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
 }
+ipcMain$1.handle("read-file", async (_event, filePath) => {
+  try {
+    const content = readFileSync(filePath, "utf-8");
+    return content;
+  } catch (err) {
+    console.error("Failed to read file:", err);
+    return null;
+  }
+});
 ipcMain$1.handle(
   "create-component",
   async (_event, filepath, code2) => {

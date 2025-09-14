@@ -33,7 +33,8 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
 });
 electron.contextBridge.exposeInMainWorld("fsmodule", {
   create: (filepath, code) => electron.ipcRenderer.invoke("create-component", filepath, code),
-  pickProject: () => electron.ipcRenderer.invoke("pick-project")
+  pickProject: () => electron.ipcRenderer.invoke("pick-project"),
+  openFile: (filePath) => electron.ipcRenderer.invoke("read-file", filePath)
 });
 electron.contextBridge.exposeInMainWorld("updater", {
   // Trigger update check

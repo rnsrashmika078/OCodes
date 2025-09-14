@@ -34,9 +34,22 @@ export interface UserPreference {
 export interface Tree {
   type: string;
   name: string;
+  path: string;
   children?: Tree[];
 }
 export interface FilePath {
   path: string;
   tree: Tree[];
+}
+
+export interface OpenFile {
+  content: string;
+  node: Tree;
+}
+
+export interface Tabs {
+  title: string;
+  type: string;
+  path: string;
+  content: string;
 }

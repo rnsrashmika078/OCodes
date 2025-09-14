@@ -28,6 +28,7 @@ declare global {
     fsmodule: {
       create: (filepath: string, code: string) => Promise<string, string>;
       pickProject: () => Promise<FilePath>;
+      openFile: (filePath: string) => Promise<string>;
     };
   }
 }

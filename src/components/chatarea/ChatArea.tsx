@@ -1,8 +1,6 @@
 import { useChatClone } from "@/zustand/store";
 import { useEffect, useRef } from "react";
-// @ts-expect-error:import path error
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-// @ts-expect-error:import path error
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import CopyToClipboard from "../common/CopyToClipboard";
 import ReactMarkdown from "react-markdown";

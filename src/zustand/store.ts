@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import { AuthUser, UpdateChat, UserMessage } from "@/types/type";
+import {
+  AuthUser,
+  FilePath,
+  OpenFile,
+  Tree,
+  UpdateChat,
+  UserMessage,
+} from "@/types/type";
 
 type ChatStore = {
   height: number;
@@ -11,6 +18,11 @@ type ChatStore = {
   notifier: String | null;
   copiedText: string | null;
   activeChat: UpdateChat | null;
+
+  // new store items
+  project: FilePath | null;
+  openFiles: OpenFile[];
+
   setUserMessages: (message: UserMessage | null) => void;
   setLoading: (isLoading: boolean) => void;
   setHeight: (currentHeight: number) => void;
@@ -24,6 +36,11 @@ type ChatStore = {
   deleteChat: (id: string) => void;
   setTrackId: (id: string | null) => void;
   setCopiedText: (copiedText: string | null) => void;
+
+  // new store items
+  setProject: (project: FilePath | null) => void;
+  setOpenFiles: (file: OpenFile) => void;
+  setCloseFile: (filepath: string) => void;
 };
 
 type ActiveTabStore = {
@@ -42,6 +59,11 @@ export const useChatClone = create<ChatStore>((set) => ({
   activeChat: null,
   height: window.innerHeight,
   copiedText: null,
+
+  // new store items
+  project: null,
+  openFiles: [],
+
   setUserMessages: (message: UserMessage | null) =>
     set((state) => ({
       userMessages: message ? [...(state.userMessages ?? []), message] : [],
@@ -68,6 +90,17 @@ export const useChatClone = create<ChatStore>((set) => ({
     })),
   setTrackId: (id) => set(() => ({ trackId: id })),
   setCopiedText: (text) => set(() => ({ copiedText: text })),
+
+  // new store items
+  setProject: (filepath) => set(() => ({ project: filepath })),
+  setOpenFiles: (files) =>
+    set((state) => ({
+      openFiles: [...(state.openFiles ?? []), files],
+    })),
+  setCloseFile: (filepath) =>
+    set((state) => ({
+      openFiles: state.openFiles.filter((file) => file.node.path !== filepath),
+    })),
 }));
 
 export const useActiveTab = create<ActiveTabStore>((set) => ({
