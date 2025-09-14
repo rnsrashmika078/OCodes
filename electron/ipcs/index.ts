@@ -5,7 +5,7 @@ import { readFileSync } from "fs";
 
 //import a project or folder
 export function registerFileSystemHandlers() {
-  ipcMain.handle("pick-project", async () => {
+  ipcMain.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
     });
@@ -35,8 +35,7 @@ export function registerFileSystemHandlers() {
 }
 
 //open a file
-
-ipcMain.handle("read-file", async (_event, filePath: string) => {
+ipcMain.handle("read", async (_event, filePath: string) => {
   try {
     const content = readFileSync(filePath, "utf-8");
     return content;
@@ -46,26 +45,60 @@ ipcMain.handle("read-file", async (_event, filePath: string) => {
   }
 });
 
-ipcMain.handle(
-  "create-component",
-  async (_event, filepath: string, code: string) => {
-    try {
-      // Resolve full path (src/components/<folder>/<Component>.tsx)
-      const filePath = join(__dirname, "../src/components", filepath);
+// ipcMain.handle(
+//   "create",
+//   async (_event, filepath: string, code: string) => {
+//     try {
+//       // Resolve full path (src/components/<folder>/<Component>.tsx)
+//       const filePath = join(__dirname, "../src/components", filepath);
 
-      console.log("📂 Received File path:", filePath);
+//       console.log("📂 Received File path:", filePath);
+
+//       // Ensure directory exists
+//       const dir = dirname(filePath);
+//       mkdirSync(dir, { recursive: true });
+
+//       // Write AI code to file
+//       writeFileSync(filePath, code, "utf8");
+
+//       console.log("Component created at:", filePath);
+//       return { success: true, filePath };
+//     } catch (error) {
+//       console.error("Error creating component:", error);
+//       return { success: false, error: String(error) };
+//     }
+//   }
+// );
+
+ipcMain.handle(
+  "create",
+  async (_event, content?: string, filepath?: string, fileName?: string) => {
+    try {
+      console.log(fileName);
+      // Show save dialog (user picks folder + types filename)
+      const result = await dialog.showSaveDialog({
+        title: "Create a new file",
+        defaultPath: `${fileName}.txt`,
+        // filters: [{ name: "TypeScript/TSX", extensions: ["tsx", "ts", "txt"] }],
+      });
+
+      if (result.canceled || !result.filePath) {
+        return { success: false, error: "No file selected" };
+      }
+
+      const filePath = result.filePath;
 
       // Ensure directory exists
       const dir = dirname(filePath);
       mkdirSync(dir, { recursive: true });
 
-      // Write AI code to file
-      writeFileSync(filePath, code, "utf8");
+      // Create file
+      writeFileSync(filePath, content ?? "", "utf8");
 
-      console.log("✅ Component created at:", filePath);
+      console.log("File created at:", filePath);
       return { success: true, filePath };
     } catch (error) {
-      console.error("❌ Error creating component:", error);
+      console.error("Error creating file:", error);
       return { success: false, error: String(error) };
     }
   }

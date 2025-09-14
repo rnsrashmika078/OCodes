@@ -12,6 +12,7 @@ import QuickBar from "../sidebar/QuickBar";
 import Explorer from "../sidebar/tabs/explorer/Explorer";
 import { Tree } from "@/types/type";
 import { BiUpload } from "react-icons/bi";
+import Topbar from "../topbar/Topbar";
 
 const Layout = () => {
   const height = useChatClone((store) => store.height);
@@ -39,9 +40,7 @@ const Layout = () => {
     <div className="flex flex-col h-full w-full">
       <div className="flex flex-col justify-between h-full">
         {/* Top bar */}
-        <div className="flex flex-col w-full h-8 bg-purple-500">
-          <BiUpload size={25} />
-        </div>
+        <Topbar />
 
         {/* Middle area (Sidebar + Main) */}
         <div className="flex w-full flex-1 overflow-hidden">
@@ -70,7 +69,7 @@ const Layout = () => {
           <div className="flex flex-col flex-1 w-full h-full">
             {/* Top section (tabs + editor) */}
             <div className="flex-1 custom-scrollbar h-full w-full">
-              <TabLayout openFiles={openFiles} />
+              <TabLayout />
               {/* <div>hi there</div> */}
             </div>
 

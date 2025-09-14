@@ -17,7 +17,7 @@ import require$$0$1 from "constants";
 import require$$0$2 from "stream";
 import require$$4$2 from "util";
 import require$$5$1 from "assert";
-import require$$1$2, { join, dirname } from "path";
+import require$$1$2, { dirname, join } from "path";
 import require$$1$6 from "child_process";
 import require$$0$3 from "events";
 import require$$0$4 from "crypto";
@@ -29090,7 +29090,7 @@ function UserPreference() {
   });
 }
 function registerFileSystemHandlers() {
-  ipcMain$1.handle("pick-project", async () => {
+  ipcMain$1.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"]
     });
@@ -29112,7 +29112,7 @@ function registerFileSystemHandlers() {
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
 }
-ipcMain$1.handle("read-file", async (_event, filePath) => {
+ipcMain$1.handle("read", async (_event, filePath) => {
   try {
     const content = readFileSync(filePath, "utf-8");
     return content;
@@ -29122,26 +29122,34 @@ ipcMain$1.handle("read-file", async (_event, filePath) => {
   }
 });
 ipcMain$1.handle(
-  "create-component",
-  async (_event, filepath, code2) => {
+  "create",
+  async (_event, content, filepath, fileName) => {
     try {
-      const filePath = join(__dirname, "../src/components", filepath);
-      console.log("📂 Received File path:", filePath);
+      console.log(fileName);
+      const result = await dialog.showSaveDialog({
+        title: "Create a new file",
+        defaultPath: `${fileName}.txt`
+        // filters: [{ name: "TypeScript/TSX", extensions: ["tsx", "ts", "txt"] }],
+      });
+      if (result.canceled || !result.filePath) {
+        return { success: false, error: "No file selected" };
+      }
+      const filePath = result.filePath;
       const dir = dirname(filePath);
       mkdirSync(dir, { recursive: true });
-      writeFileSync$1(filePath, code2, "utf8");
-      console.log("✅ Component created at:", filePath);
+      writeFileSync$1(filePath, content ?? "", "utf8");
+      console.log("File created at:", filePath);
       return { success: true, filePath };
     } catch (error2) {
-      console.error("❌ Error creating component:", error2);
+      console.error("Error creating file:", error2);
       return { success: false, error: String(error2) };
     }
   }
 );
 createRequire(import.meta.url);
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-dotenv.config({ path: path.join(__dirname$1, "..", ".env.local") });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = path.join(__dirname, "..");
+dotenv.config({ path: path.join(__dirname, "..", ".env.local") });
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
@@ -29151,7 +29159,7 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs"),
+      preload: path.join(__dirname, "preload.mjs"),
       contextIsolation: true,
       nodeIntegration: false
     },

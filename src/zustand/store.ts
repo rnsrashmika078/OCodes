@@ -22,6 +22,7 @@ type ChatStore = {
   // new store items
   project: FilePath | null;
   openFiles: OpenFile[];
+  activeFile: OpenFile | null;
 
   setUserMessages: (message: UserMessage | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -40,7 +41,9 @@ type ChatStore = {
   // new store items
   setProject: (project: FilePath | null) => void;
   setOpenFiles: (file: OpenFile) => void;
-  setCloseFile: (filepath: string) => void;
+  setCloseFile: (fileId: string) => void;
+  setCreateFile: (file: OpenFile) => void;
+  setActiveFile: (file: OpenFile | null) => void;
 };
 
 type ActiveTabStore = {
@@ -63,6 +66,7 @@ export const useChatClone = create<ChatStore>((set) => ({
   // new store items
   project: null,
   openFiles: [],
+  activeFile: null,
 
   setUserMessages: (message: UserMessage | null) =>
     set((state) => ({
@@ -97,9 +101,17 @@ export const useChatClone = create<ChatStore>((set) => ({
     set((state) => ({
       openFiles: [...(state.openFiles ?? []), files],
     })),
-  setCloseFile: (filepath) =>
+  setCloseFile: (fileId) =>
     set((state) => ({
-      openFiles: state.openFiles.filter((file) => file.node.path !== filepath),
+      openFiles: state.openFiles.filter((file) => file.id !== fileId),
+    })),
+  setCreateFile: (file) =>
+    set((state) => ({
+      openFiles: [...(state.openFiles ?? []), file],
+    })),
+  setActiveFile: (file) =>
+    set(() => ({
+      activeFile: file,
     })),
 }));
 

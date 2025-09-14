@@ -26,7 +26,11 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => void; // called when update downloaded
     };
     fsmodule: {
-      create: (filepath: string, code: string) => Promise<string, string>;
+      create: (
+        content?: string,
+        filepath?: string,
+        fileName?: string
+      ) => Promise<FilePath>;
       pickProject: () => Promise<FilePath>;
       openFile: (filePath: string) => Promise<string>;
     };

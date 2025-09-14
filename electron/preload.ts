@@ -38,10 +38,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
 //file based bridge
 contextBridge.exposeInMainWorld("fsmodule", {
-  create: (filepath: string, code: string) =>
-    ipcRenderer.invoke("create-component", filepath, code),
-  pickProject: () => ipcRenderer.invoke("pick-project"),
-  openFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
+  create: (content?: string, filepath?: string, fileName?: string) =>
+    ipcRenderer.invoke("create", content, filepath, fileName),
+  pickProject: () => ipcRenderer.invoke("pick"),
+  openFile: (filePath: string) => ipcRenderer.invoke("read", filePath),
 });
 
 contextBridge.exposeInMainWorld("updater", {

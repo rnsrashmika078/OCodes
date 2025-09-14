@@ -43,8 +43,9 @@ export interface FilePath {
 }
 
 export interface OpenFile {
+  id: string;
   content: string;
-  node: Tree;
+  node: Tree | null;
 }
 
 export interface Tabs {

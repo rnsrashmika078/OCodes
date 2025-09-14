@@ -3,6 +3,7 @@ import { FilePath, Tree } from "@/types/type";
 import { useChatClone } from "@/zustand/store";
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
+import { v4 as uuidv4 } from "uuid";
 
 export const FileTree = ({
   nodes,
@@ -26,7 +27,7 @@ export const FileTree = ({
       const content = await window.fsmodule.openFile(node.path);
       console.log("📄 File content:", content);
       if (content) {
-        setOpenFiles({ content, node: node });
+        setOpenFiles({ id: uuidv4(), content, node: node });
       }
     }
   };
@@ -85,14 +86,25 @@ export const FileTree = ({
               </div>
             )
           ) : null}
-          <div className="flex justify-center items-center">
+
+          {/* this is for fresh start where not project open to the editor */}
+          <div className="flex  justify-center items-center flex-shrink-0">
             {expanded[-1] && (
-              <div className="flex flex-col">
+              <div className="flex flex-col mt-2">
                 <h2>You have not yet opened a folder</h2>
                 <Button
+                  className="mt-2 mb-2"
                   name="Open Folder"
                   onClick={async () =>
                     setProject(await window.fsmodule.pickProject())
+                  }
+                />
+                <h2>You can also create new project here</h2>
+                <Button
+                  className="mt-2"
+                  name="Create a Project"
+                  onClick={async () =>
+                    setProject(await window.fsmodule.create())
                   }
                 />
               </div>
