@@ -20,7 +20,7 @@ import require$$5$1 from "assert";
 import require$$1$2, { dirname, join } from "path";
 import require$$1$6 from "child_process";
 import require$$0$3 from "events";
-import require$$0$4 from "crypto";
+import require$$0$4, { randomFillSync, randomUUID } from "crypto";
 import require$$1$3 from "tty";
 import require$$2$1 from "os";
 import require$$4$3 from "url";
@@ -29089,6 +29089,37 @@ function UserPreference() {
     return store.get("authUser", null);
   });
 }
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 256).toString(16).slice(1));
+}
+function unsafeStringify(arr, offset = 0) {
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+}
+const rnds8Pool = new Uint8Array(256);
+let poolPtr = rnds8Pool.length;
+function rng() {
+  if (poolPtr > rnds8Pool.length - 16) {
+    randomFillSync(rnds8Pool);
+    poolPtr = 0;
+  }
+  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+}
+const native = { randomUUID };
+function v4(options, buf, offset) {
+  var _a;
+  if (native.randomUUID && true && !options) {
+    return native.randomUUID();
+  }
+  options = options || {};
+  const rnds = options.random ?? ((_a = options.rng) == null ? void 0 : _a.call(options)) ?? rng();
+  if (rnds.length < 16) {
+    throw new Error("Random bytes length must be >= 16");
+  }
+  rnds[6] = rnds[6] & 15 | 64;
+  rnds[8] = rnds[8] & 63 | 128;
+  return unsafeStringify(rnds);
+}
 function registerFileSystemHandlers() {
   ipcMain$1.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
@@ -29101,20 +29132,22 @@ function registerFileSystemHandlers() {
         const filePath = join(dir, name);
         const stats = statSync(filePath);
         return stats.isDirectory() ? {
+          id: v4(),
           type: "folder",
           name,
           path: filePath,
           children: readDirRecursive(filePath)
-        } : { type: "file", name, path: filePath };
+        } : { id: v4(), type: "file", name, path: filePath };
       });
     }
     console.log("📂 File path:", folderPath);
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
 }
-ipcMain$1.handle("read", async (_event, filePath) => {
+ipcMain$1.handle("open", async (_event, filePath) => {
   try {
     const content = readFileSync(filePath, "utf-8");
+    console.log("📄 File content:", content);
     return content;
   } catch (err) {
     console.error("Failed to read file:", err);
@@ -29122,30 +29155,76 @@ ipcMain$1.handle("read", async (_event, filePath) => {
   }
 });
 ipcMain$1.handle(
-  "create",
-  async (_event, content, filepath, fileName) => {
+  "create-file",
+  async (_event, content, filepath, fileName, method) => {
     try {
-      console.log(fileName);
-      const result = await dialog.showSaveDialog({
-        title: "Create a new file",
-        defaultPath: `${fileName}.txt`
-        // filters: [{ name: "TypeScript/TSX", extensions: ["tsx", "ts", "txt"] }],
-      });
-      if (result.canceled || !result.filePath) {
-        return { success: false, error: "No file selected" };
+      let filePath;
+      if (method === "silent") {
+        if (!filepath || !fileName) {
+          return { success: false, error: "No path or filename provided" };
+        }
+        filePath = require$$1$2.join(filepath, fileName);
+        const dir = dirname(filePath);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync$1(filePath, content ?? "", "utf8");
+      } else {
+        const result = await dialog.showSaveDialog({
+          title: "Create a new file",
+          defaultPath: `${fileName ?? "new-file"}.txt`
+        });
+        if (result.canceled || !result.filePath) {
+          return { success: false, error: "No file selected" };
+        }
+        filePath = result.filePath;
+        const dir = dirname(filePath);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync$1(filePath, content ?? "", "utf8");
       }
-      const filePath = result.filePath;
-      const dir = dirname(filePath);
-      mkdirSync(dir, { recursive: true });
-      writeFileSync$1(filePath, content ?? "", "utf8");
       console.log("File created at:", filePath);
-      return { success: true, filePath };
+      return {
+        success: true,
+        filePath,
+        id: v4(),
+        name: require$$1$2.basename(filePath),
+        type: require$$1$2.extname(filePath).slice(1) || "file"
+      };
     } catch (error2) {
       console.error("Error creating file:", error2);
-      return { success: false, error: String(error2) };
+      return {
+        success: false,
+        error: String(error2),
+        filePath: null,
+        name: null,
+        type: null
+      };
     }
   }
 );
+ipcMain$1.handle("create-folder", async (_event, folderPath) => {
+  try {
+    if (!folderPath) {
+      return { success: false, error: "No folder path provided" };
+    }
+    mkdirSync(folderPath, { recursive: true });
+    console.log("Folder created at:", folderPath);
+    return {
+      success: true,
+      folderPath,
+      id: v4(),
+      name: require$$1$2.basename(folderPath),
+      type: "folder"
+    };
+  } catch (error2) {
+    console.error("Error creating folder:", error2);
+    return {
+      success: false,
+      error: String(error2),
+      folderPath: null,
+      name: null,
+      type: null
+    };
+  }
+});
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");

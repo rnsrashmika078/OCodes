@@ -1,6 +1,5 @@
 import { BiDotsHorizontal } from "react-icons/bi";
 import { FileTree } from "./filemanager/FileTree";
-
 import { useChatClone } from "@/zustand/store";
 
 const Explorer = () => {
@@ -18,8 +17,8 @@ const Explorer = () => {
         {/* header ends here */}
       </div>
       {/* file manager */}
-      <div className="relative h-full custom-scrollbar-y">
-        <div className="h-[500px] space-y-2 p-2">
+      <div className="relative h-full custom-scrollbar-y ">
+        <div className="h-full space-y-2 p-2">
           <FileTree nodes={project?.tree} project={project} />
         </div>
       </div>

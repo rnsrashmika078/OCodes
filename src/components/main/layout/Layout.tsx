@@ -66,9 +66,9 @@ const Layout = () => {
           </div>
 
           {/* Main content area */}
-          <div className="flex flex-col flex-1 w-full h-full">
+          <div className="flex flex-col flex-1 w-full h-full bg-red-500">
             {/* Top section (tabs + editor) */}
-            <div className="flex-1 custom-scrollbar h-full w-full">
+            <div className="flex-1  custom-scrollbar h-full w-full bg-blue-500">
               <TabLayout />
               {/* <div>hi there</div> */}
             </div>

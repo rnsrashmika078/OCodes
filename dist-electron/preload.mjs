@@ -32,9 +32,10 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   initializeLLM: () => electron.ipcRenderer.invoke("run-ollama")
 });
 electron.contextBridge.exposeInMainWorld("fsmodule", {
-  create: (content, filepath, fileName) => electron.ipcRenderer.invoke("create", content, filepath, fileName),
-  pickProject: () => electron.ipcRenderer.invoke("pick"),
-  openFile: (filePath) => electron.ipcRenderer.invoke("read", filePath)
+  createFile: (content, filepath, fileName, method) => electron.ipcRenderer.invoke("create-file", content, filepath, fileName, method),
+  createFolder: (parentPath, folderName) => electron.ipcRenderer.invoke("create-folder", parentPath, folderName),
+  pick: () => electron.ipcRenderer.invoke("pick"),
+  openFile: (filePath) => electron.ipcRenderer.invoke("open", filePath)
 });
 electron.contextBridge.exposeInMainWorld("updater", {
   // Trigger update check

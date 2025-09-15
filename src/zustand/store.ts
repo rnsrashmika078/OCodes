@@ -7,6 +7,7 @@ import {
   UpdateChat,
   UserMessage,
 } from "@/types/type";
+import { insertNodeAtPath } from "@/lib/insertNodeAtPath"; // import here
 
 type ChatStore = {
   height: number;
@@ -23,6 +24,7 @@ type ChatStore = {
   project: FilePath | null;
   openFiles: OpenFile[];
   activeFile: OpenFile | null;
+  clickedFileCurrentPath: string | null;
 
   setUserMessages: (message: UserMessage | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -40,10 +42,15 @@ type ChatStore = {
 
   // new store items
   setProject: (project: FilePath | null) => void;
+  setInsertFolderToProject: (newNode: Tree, targetPath: string) => void;
+  setInsertFileToProject: (newNode: Tree, targetPath: string) => void;
+  setUpdateProjectFile: (updateFile: OpenFile) => void;
   setOpenFiles: (file: OpenFile) => void;
   setCloseFile: (fileId: string) => void;
   setCreateFile: (file: OpenFile) => void;
   setActiveFile: (file: OpenFile | null) => void;
+  setUpdateOpenFiles: (file: OpenFile) => void;
+  setClickedFileCurrentPath: (path: string | null) => void;
 };
 
 type ActiveTabStore = {
@@ -62,6 +69,7 @@ export const useChatClone = create<ChatStore>((set) => ({
   activeChat: null,
   height: window.innerHeight,
   copiedText: null,
+  clickedFileCurrentPath: null,
 
   // new store items
   project: null,
@@ -97,6 +105,42 @@ export const useChatClone = create<ChatStore>((set) => ({
 
   // new store items
   setProject: (filepath) => set(() => ({ project: filepath })),
+  setInsertFolderToProject: (newNode, targetPath) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        path: state.project?.path ?? "",
+        tree: insertNodeAtPath(state.project?.tree ?? [], targetPath, newNode),
+      },
+    })),
+  setInsertFileToProject: (newNode, targetPath) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        path: state.project?.path ?? "",
+        tree: insertNodeAtPath(state.project?.tree ?? [], targetPath, newNode),
+      },
+    })),
+  setUpdateProjectFile: (updateFile) =>
+    set((state) => ({
+      project: state.project
+        ? {
+            ...state.project, // keep `path`
+            tree: state.project.tree.map((f) =>
+              f.id === updateFile.id
+                ? {
+                    ...f,
+                    id: updateFile.id ?? "",
+                    name: updateFile.name ?? "",
+                    path: updateFile.path ?? "",
+                    type: updateFile.type ?? "",
+                    children: f.children ?? [], // keep children if they exist
+                  }
+                : f
+            ),
+          }
+        : null,
+    })),
   setOpenFiles: (files) =>
     set((state) => ({
       openFiles: [...(state.openFiles ?? []), files],
@@ -112,6 +156,17 @@ export const useChatClone = create<ChatStore>((set) => ({
   setActiveFile: (file) =>
     set(() => ({
       activeFile: file,
+    })),
+  setUpdateOpenFiles: (file) =>
+    set((state) => ({
+      openFiles: state.openFiles.map((f) =>
+        f?.id === file.id ? { ...f, ...file } : f
+      ),
+    })),
+
+  setClickedFileCurrentPath: (path) =>
+    set(() => ({
+      clickedFileCurrentPath: path,
     })),
 }));
 

@@ -58,6 +58,15 @@ sub {
   color: rgba(255, 255, 255, 0.314);
   font-size: 36px;
 }
+.icon {
+  color: white;
+  padding: 2px;
+  font-size: 22px;
+}
+.icon:hover {
+  background-color: rgba(255, 255, 255, 0.314);
+  border-radius: 4px;
+}
 .custom-scrollbar-y {
   overflow-y: auto;
   scrollbar-width: thin; /* Firefox */

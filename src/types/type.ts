@@ -32,6 +32,7 @@ export interface UserPreference {
   authstats: boolean;
 }
 export interface Tree {
+  id: string; //this is the child id
   type: string;
   name: string;
   path: string;
@@ -44,13 +45,17 @@ export interface FilePath {
 
 export interface OpenFile {
   id: string;
+  name: string;
   content: string;
-  node: Tree | null;
+  path: string;
+  type: string;
+
+  // node: Tree | null;
 }
 
-export interface Tabs {
-  title: string;
-  type: string;
-  path: string;
-  content: string;
-}
+// export interface Tabs {
+//   title: string;
+//   type: string;
+//   path: string;
+//   content: string;
+// }
