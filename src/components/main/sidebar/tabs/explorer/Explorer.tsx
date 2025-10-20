@@ -4,7 +4,6 @@ import { useChatClone } from "@/zustand/store";
 
 const Explorer = () => {
   const project = useChatClone((store) => store.project);
-  console.log(project);
 
   return (
     <div className="relative flex flex-col w-full custom-scrollbar-x h-full">

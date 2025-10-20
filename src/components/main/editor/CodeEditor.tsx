@@ -1,10 +1,14 @@
+import { useDebounce } from "@/hooks/useDebounce";
 import { useChatClone } from "@/zustand/store";
 import Editor, { loader } from "@monaco-editor/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const CodeEditor = () => {
   const activeFile = useChatClone((store) => store.activeFile);
+  const project = useChatClone((store) => store.project);
+  const setProject = useChatClone((store) => store.setProject);
   const setActiveFile = useChatClone((store) => store.setActiveFile);
+  const setUpdateActiveFile = useChatClone((store) => store.setUpdateActiveFile);
   function getLanguageFromFileName(fileName: string) {
     const ext = fileName.split(".").pop()?.toLowerCase();
     switch (ext) {
@@ -20,72 +24,46 @@ const CodeEditor = () => {
         return "plaintext";
     }
   }
+  const [editorCode, setEditorCode] = useState<string>(
+    activeFile?.content ?? ""
+  );
+  const debounceCodeEditorText = useDebounce(editorCode, 300);
+
   useEffect(() => {
-    const loadReactTypes = async () => {
-      const monacoInstance = await loader.init();
-      const tsDefaults = monacoInstance.languages.typescript.typescriptDefaults;
-
-      // tsDefaults.setCompilerOptions({
-      //   target: monacoInstance.languages.typescript.ScriptTarget.ES2020,
-      //   jsx: monacoInstance.languages.typescript.JsxEmit.React,
-      //   module: monacoInstance.languages.typescript.ModuleKind.ESNext,
-      //   moduleResolution:
-      //     monacoInstance.languages.typescript.ModuleResolutionKind.NodeJs,
-      //   allowNonTsExtensions: true,
-      //   esModuleInterop: true,
-      //   noEmit: true,
-      //   baseUrl: "file:///", // root path
-      //   paths: {
-      //     react: ["file:///node_modules/@types/react/index.d.ts"],
-      //     "react-dom": ["file:///node_modules/@types/react-dom/index.d.ts"],
-      //   },
-      // });
-      tsDefaults.setCompilerOptions({
-        jsx: monacoInstance.languages.typescript.JsxEmit.React,
-        module: monacoInstance.languages.typescript.ModuleKind.ESNext,
-        allowNonTsExtensions: true,
-        esModuleInterop: true,
-        skipLibCheck: true, // 👈 ignore type errors from .d.ts files
-        noEmit: true,
-      });
-
-      // Fetch React types from public
-      const reactRes = await fetch("/types/react/index.d.ts");
-      const reactDomRes = await fetch("/types/react-dom/index.d.ts");
-      const reactCode = await reactRes.text();
-      const reactDomCode = await reactDomRes.text();
-
-      tsDefaults.addExtraLib(
-        reactCode,
-        "file:///node_modules/@types/react/index.d.ts"
+    const saveChanges = async () => {
+      await window.fsmodule.saveFile(
+        debounceCodeEditorText.toString() ?? "",
+        activeFile?.path,
+        activeFile?.name
       );
-      tsDefaults.addExtraLib(
-        reactDomCode,
-        "file:///node_modules/@types/react-dom/index.d.ts"
-      );
+      setUpdateActiveFile(debounceCodeEditorText.toString() ?? "");
+      console.log("save file done");
+      // if (project) {
+      //   setProject(await window.fsmodule.refreshProject(project.path));
+      // }
     };
 
-    loadReactTypes();
-  }, []);
+    saveChanges();
+  }, [debounceCodeEditorText]);
 
   return (
-    <div className="flex flex-[1] h-full w-[calc(99.5%)]">
+    <div className="flex flex-[1] h-full w-[calc(100%-0.5rem)]">
       {activeFile && activeFile.content ? (
         <Editor
-          onChange={(value) =>
-            setActiveFile({ ...activeFile, content: value ?? "" })
-          }
-          height="100%" // 👈 fill parent height
-          width="100%" // 👈 fill parent width
+          onChange={(value) => {
+            setEditorCode(value ?? "");
+          }}
+          height="100%"
+          width="100%"
           defaultLanguage={getLanguageFromFileName(activeFile?.name ?? "")}
-          value={(activeFile && activeFile.content) || "// empty file"}
+          value={editorCode}
           theme="vs-dark"
           options={{
-            minimap: { enabled: false }, // hide minimap
-            scrollBeyondLastLine: false, // cleaner UX
-            wordWrap: "on", // wrap long lines
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: "on",
             fontSize: 14,
-            automaticLayout: true, // 👈 makes it responsive
+            automaticLayout: true,
           }}
         />
       ) : (
@@ -94,9 +72,7 @@ const CodeEditor = () => {
           <sub>AI based code editor</sub>
         </div>
       )}
-      {/* Container must be flex-1 to fill space */}
     </div>
   );
 };
-
 export default CodeEditor;

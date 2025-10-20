@@ -1,20 +1,15 @@
-import { useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 
-export const useDebounce = <T extends (...args: any[]) => void>(
-  fn: T,
-  delay: number
-) => {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export const useDebounce = (inputText: String, delay: number) => {
+  const [debouncedText, setDebouncedText] = useState<String>("");
 
-  const debouncedFn = useCallback(
-    (...args: Parameters<T>) => {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        fn(...args);
-      }, delay);
-    },
-    [fn, delay]
-  );
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedText(inputText);
+    }, delay);
 
-  return debouncedFn;
+    return () => clearTimeout(timeout);
+  }, [inputText, delay]);
+
+  return debouncedText;
 };

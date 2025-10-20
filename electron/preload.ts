@@ -34,6 +34,14 @@ contextBridge.exposeInMainWorld("auth", {
 
 contextBridge.exposeInMainWorld("electronAPI", {
   initializeLLM: () => ipcRenderer.invoke("run-ollama"),
+  onFsChange: (callback: (event: string, data: any) => void) => {
+    const listener = (_event: any, data: any) => callback(data.event, data);
+    ipcRenderer.on("fs-change", listener);
+
+    return () => {
+      ipcRenderer.removeListener("fs-change", listener);
+    };
+  },
 });
 
 //file based bridge
@@ -44,9 +52,16 @@ contextBridge.exposeInMainWorld("fsmodule", {
     fileName?: string,
     method?: string
   ) => ipcRenderer.invoke("create-file", content, filepath, fileName, method),
+  saveFile: (content?: string, filepath?: string, fileName?: string) =>
+    ipcRenderer.invoke("save-file", content, filepath, fileName),
+  create: (filepath?: string, code?: string) =>
+    ipcRenderer.invoke("create", filepath, code),
   createFolder: (parentPath?: string, folderName?: string) =>
     ipcRenderer.invoke("create-folder", parentPath, folderName),
   pick: () => ipcRenderer.invoke("pick"),
+  refreshProject: (filePath: string) =>
+    ipcRenderer.invoke("read-project", filePath),
+
   openFile: (filePath: string) => ipcRenderer.invoke("open", filePath),
 });
 

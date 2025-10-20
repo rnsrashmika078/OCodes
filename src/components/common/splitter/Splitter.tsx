@@ -1,12 +1,18 @@
 interface SplitterProps extends React.HTMLAttributes<HTMLDivElement> {
-  type?: "horizontal" | "vertical";
+  type?: "horizontal" | "vertical" | "horizontalFlip";
   max?: number;
   min?: number;
   splitterId: number;
-  setDragWidth: (data: { width: number; height: number; id: number }) => void;
+  setDragWidth: (data: {
+    width: number;
+    height: number;
+    widthFlip: number;
+    id: number;
+  }) => void;
   dragWidth: {
     width: number;
     height: number;
+    widthFlip: number;
     id: number;
   };
 }
@@ -27,16 +33,15 @@ const Splitter = ({
     const startHeight = dragWidth.height;
 
     const handleMouseMove = (ev: MouseEvent) => {
+      const deltaX = ev.clientX - startX;
+      const deltaY = ev.clientY - startY;
+
       if (type === "horizontal") {
-        let newWidth = startWidth + (ev.clientX - startX);
+        let newWidth = startWidth + deltaX;
         if (newWidth >= min && newWidth <= max) {
-          setDragWidth({
-            ...dragWidth,
-            width: newWidth,
-            id: splitterId,
-          });
+          setDragWidth({ ...dragWidth, width: newWidth, id: splitterId });
         }
-      } else {
+      } else if (type === "vertical") {
         let newHeight = startHeight + (startY - ev.clientY);
         if (newHeight >= min && newHeight <= max) {
           setDragWidth({
@@ -45,10 +50,16 @@ const Splitter = ({
             id: splitterId,
           });
         }
+      } else if (type === "horizontalFlip") {
+        const container = document.body.getBoundingClientRect(); // or parent container
+        let newWidth = container.width - ev.clientX; // distance from right edge
+        if (newWidth >= min && newWidth <= max) {
+          setDragWidth({ ...dragWidth, widthFlip: newWidth, id: splitterId });
+        }
       }
 
       document.body.style.cursor =
-        type === "horizontal" ? "ew-resize" : "ns-resize";
+        type === "vertical" ? "ns-resize" : "ew-resize";
     };
 
     const handleMouseUp = () => {
@@ -62,10 +73,11 @@ const Splitter = ({
   };
 
   const splitterType = {
-    vertical:
-      "absolute  -translate-y-1/2 border cursor-ns-resize w-full",
+    vertical: "absolute  -translate-y-1/2 border cursor-ns-resize w-full",
     horizontal:
-      "absolute  top-1/2 right-0  -translate-y-1/2 h-full border cursor-ew-resize",
+      "absolute  top-1/2 right-0  -translate-y-1/2 h-full border  cursor-ew-resize",
+    horizontalFlip:
+      "absolute  top-1/2 left-0  -translate-y-1/2 h-full border  cursor-ew-resize",
   };
 
   return (

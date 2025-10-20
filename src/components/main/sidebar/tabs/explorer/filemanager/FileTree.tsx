@@ -43,7 +43,6 @@ export const FileTree = ({
   const handleOpen = async (node: Tree) => {
     if (node.type === "file") {
       const content = await window.fsmodule.openFile(node.path);
-      console.log("📄 File content:", content);
       if (content) {
         setOpenFiles({
           content,
@@ -73,11 +72,6 @@ export const FileTree = ({
           newNode.name,
           "silent"
         );
-        console.log("Created folder result ", result);
-
-        setInsertFolderToProject(newNode, clickedFileCurrentPath ?? "");
-        // setIsAddingNew(newNode.path);
-
         return;
       }
       case "create-new-folder": {
@@ -90,10 +84,7 @@ export const FileTree = ({
           children: [],
         };
         const result = await window.fsmodule.createFolder(newNode.path);
-        console.log("Created folder result ", result);
 
-        setInsertFolderToProject(newNode, clickedFileCurrentPath ?? "");
-        // setIsAddingNew(newNode.path);
 
         return;
       }
@@ -105,33 +96,24 @@ export const FileTree = ({
   const sortedFiles = nodes?.sort((a, b) => {
     if (a.type === "folder" && b.type !== "folder") return -1;
     if (a.type !== "folder" && b.type === "folder") return 1;
-    // return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     return 0;
   });
 
-  console.log("Current path", clickedFileCurrentPath);
-  console.log("Project", wholeProject);
-  console.log("Node Name", nodeName);
-  console.log("activeFile Name", activeFile);
-
-  // const editRef = useRef<HTMLParagraphElement>(null);
-
-  // useEffect(() => {
-  //   if (editRef.current && isAddingNew) {
-  //     editRef.current.focus();
-  //     const range = document.createRange();
-  //     range.selectNodeContents(editRef.current);
-  //     range.collapse(false);
-  //     const sel = window.getSelection();
-  //     sel?.removeAllRanges();
-  //     sel?.addRange(range);
-  //   }
-  // }, [isAddingNew]);
-
+  useEffect(() => {
+    const unsubscribe = window.electronAPI.onFsChange(async (_event, _data) => {
+      if (project?.path) {
+        setProject(await window.fsmodule.refreshProject(project.path));
+      } else {
+        // console.warn("⚠️ No project path set, skipping refresh");
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [project]);
   useEffect(() => {
     if (!project) return;
     const update = project.tree.filter((file) => file.name === "" && file);
-    console.log("UPPP", update);
     // setProject(update);
   }, [project]);
   return (
@@ -225,21 +207,12 @@ export const FileTree = ({
                   name="Open Folder"
                   onClick={async () => setProject(await window.fsmodule.pick())}
                 />
-                {/* <h2>You can also create new folder here</h2>
-                <Button
-                  className="mt-2"
-                  name="Create a New Folder"
-                  onClick={async () =>
-                    setProject(await window.fsmodule.createFolder())
-                  }
-                /> */}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* this is where the show case of the root of hierarchy of the folder */}
       {sortedFiles &&
         !expanded[-2] &&
         sortedFiles.length > 0 &&

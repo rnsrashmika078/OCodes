@@ -1,12 +1,14 @@
 import { ipcMain, dialog } from "electron";
-import { mkdirSync, readdirSync, statSync, writeFileSync } from "fs";
-import path, { dirname, join } from "path";
+import { mkdirSync, readdirSync, statSync, watch, writeFileSync } from "fs";
+import path, { basename, dirname, extname, join } from "path";
 import { readFileSync } from "fs";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-
+import { BrowserWindow } from "electron/main";
 //import a project or folder
-export function registerFileSystemHandlers() {
+export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
+  let activeWatcher: fs.FSWatcher | null = null;
+
   ipcMain.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
@@ -31,139 +33,218 @@ export function registerFileSystemHandlers() {
           : { id: uuidv4(), type: "file", name, path: filePath };
       });
     }
-    console.log("📂 File path:", folderPath);
+    if (activeWatcher) activeWatcher.close();
 
+    // start new watcher for the project root
+    activeWatcher = watchProjectDirectory(folderPath);
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
-}
 
-//open a file
-ipcMain.handle("open", async (_event, filePath: string) => {
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    console.log("📄 File content:", content);
-    return content;
-  } catch (err) {
-    console.error("Failed to read file:", err);
-    return null;
-  }
-});
-
-// ipcMain.handle(
-//   "create",
-//   async (_event, filepath: string, code: string) => {
-//     try {
-//       // Resolve full path (src/components/<folder>/<Component>.tsx)
-//       const filePath = join(__dirname, "../src/components", filepath);
-
-//       console.log("📂 Received File path:", filePath);
-
-//       // Ensure directory exists
-//       const dir = dirname(filePath);
-//       mkdirSync(dir, { recursive: true });
-
-//       // Write AI code to file
-//       writeFileSync(filePath, code, "utf8");
-
-//       console.log("Component created at:", filePath);
-//       return { success: true, filePath };
-//     } catch (error) {
-//       console.error("Error creating component:", error);
-//       return { success: false, error: String(error) };
-//     }
-//   }
-// );
-
-
-ipcMain.handle(
-  "create-file",
-  async (
-    _event,
-    content?: string,
-    filepath?: string,
-    fileName?: string,
-    method?: string
-  ) => {
+  //open a file
+  ipcMain.handle("open", async (_event, filePath: string) => {
     try {
-      let filePath: string | undefined;
+      const content = readFileSync(filePath, "utf-8");
+      return content;
+    } catch (err) {
+      console.error("Failed to read file:", err);
+      return null;
+    }
+  });
 
-      if (method === "silent") {
+  ipcMain.handle("create", async (_event, filepath: string, code?: string) => {
+    try {
+      // Resolve full path
+      const filePath = join(filepath);
+
+      // Ensure directory exists
+      const dir = dirname(filePath);
+      mkdirSync(dir, { recursive: true });
+
+      // Write AI code to file
+      writeFileSync(filePath, code ?? "", "utf8");
+
+      // Build return object with all required properties
+      const result = {
+        id: uuidv4(), // unique id for tracking
+        content: code ?? "",
+        name: basename(filePath),
+        path: filePath,
+        type: extname(filePath).replace(".", ""), // e.g. "tsx"
+      };
+
+      return { success: true, ...result };
+    } catch (error) {
+      console.error("❌ Error creating component:", error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  ipcMain.handle(
+    "create-file",
+    async (
+      _event,
+      content?: string,
+      filepath?: string,
+      fileName?: string,
+      method?: string
+    ) => {
+      try {
+        let filePath: string | undefined;
+
+        if (method === "silent") {
+          if (!filepath || !fileName) {
+            return { success: false, error: "No path or filename provided" };
+          }
+
+          filePath = path.join(filepath, fileName);
+
+          // Ensure directory exists
+          const dir = dirname(filePath);
+          mkdirSync(dir, { recursive: true });
+
+          // Create file silently
+          writeFileSync(filePath, content ?? "", "utf8");
+        } else {
+          // Use Save Dialog
+          const result = await dialog.showSaveDialog({
+            title: "Create a new file",
+            defaultPath: `${fileName ?? "new-file"}.txt`,
+          });
+
+          if (result.canceled || !result.filePath) {
+            return { success: false, error: "No file selected" };
+          }
+
+          filePath = result.filePath;
+
+          const dir = dirname(filePath);
+          mkdirSync(dir, { recursive: true });
+
+          writeFileSync(filePath, content ?? "", "utf8");
+        }
+
+        return {
+          success: true,
+          filePath,
+          id: uuidv4(),
+          name: path.basename(filePath),
+          type: path.extname(filePath).slice(1) || "file",
+        };
+      } catch (error) {
+        console.error("Error creating file:", error);
+        return {
+          success: false,
+          error: String(error),
+          filePath: null,
+          name: null,
+          type: null,
+        };
+      }
+    }
+  );
+
+  ipcMain.handle(
+    "save-file",
+    async (_event, content?: string, filepath?: string, fileName?: string) => {
+      try {
         if (!filepath || !fileName) {
           return { success: false, error: "No path or filename provided" };
         }
-
-        filePath = path.join(filepath, fileName);
-
-        // Ensure directory exists
-        const dir = dirname(filePath);
-        mkdirSync(dir, { recursive: true });
-
-        // Create file silently
+        const filePath = path.join(filepath);
         writeFileSync(filePath, content ?? "", "utf8");
-      } else {
-        // Use Save Dialog
-        const result = await dialog.showSaveDialog({
-          title: "Create a new file",
-          defaultPath: `${fileName ?? "new-file"}.txt`,
-        });
 
-        if (result.canceled || !result.filePath) {
-          return { success: false, error: "No file selected" };
-        }
+        console.log("Saving file is done");
+        return {
+          success: true,
+          filePath,
+          id: uuidv4(),
+          name: path.basename(filePath),
+          type: path.extname(filePath).slice(1) || "file",
+        };
+      } catch (error) {
+        console.error("Error saving file:", error);
+        return {
+          success: false,
+          error: String(error),
+          filePath: null,
+          name: null,
+          type: null,
+        };
+      }
+    }
+  );
 
-        filePath = result.filePath;
-
-        const dir = dirname(filePath);
-        mkdirSync(dir, { recursive: true });
-
-        writeFileSync(filePath, content ?? "", "utf8");
+  ipcMain.handle("create-folder", async (_event, folderPath: string) => {
+    try {
+      if (!folderPath) {
+        return { success: false, error: "No folder path provided" };
       }
 
-      console.log("File created at:", filePath);
+      mkdirSync(folderPath, { recursive: true });
+
       return {
         success: true,
-        filePath,
+        folderPath,
         id: uuidv4(),
-        name: path.basename(filePath),
-        type: path.extname(filePath).slice(1) || "file",
+        name: path.basename(folderPath),
+        type: "folder",
       };
     } catch (error) {
-      console.error("Error creating file:", error);
+      console.error("Error creating folder:", error);
       return {
         success: false,
         error: String(error),
-        filePath: null,
+        folderPath: null,
         name: null,
         type: null,
       };
     }
-  }
-);
-
-ipcMain.handle("create-folder", async (_event, folderPath: string) => {
-  try {
+  });
+  ipcMain.handle("read-project", async (_event, folderPath: string) => {
     if (!folderPath) {
-      return { success: false, error: "No folder path provided" };
+      throw new Error("No folder path provided to read-project");
+    }
+    function readDirRecursive(dir: string): any {
+      return readdirSync(dir).map((name) => {
+        const filePath = join(dir, name);
+        const stats = statSync(filePath);
+        return stats.isDirectory()
+          ? {
+              id: uuidv4(),
+              type: "folder",
+              name,
+              path: filePath,
+              children: readDirRecursive(filePath),
+            }
+          : { id: uuidv4(), type: "file", name, path: filePath };
+      });
     }
 
-    mkdirSync(folderPath, { recursive: true });
-
-    console.log("Folder created at:", folderPath);
-    return {
-      success: true,
+    return { path: folderPath, tree: readDirRecursive(folderPath) };
+  });
+  // Watch project folder for changes
+  function watchProjectDirectory(folderPath: string) {
+    const watcher = watch(
       folderPath,
-      id: uuidv4(),
-      name: path.basename(folderPath),
-      type: "folder",
-    };
-  } catch (error) {
-    console.error("Error creating folder:", error);
-    return {
-      success: false,
-      error: String(error),
-      folderPath: null,
-      name: null,
-      type: null,
-    };
+      { recursive: true },
+      (event, filename) => {
+        if (!filename) return;
+
+        const fullPath = path.join(folderPath, filename);
+        // send update to renderer
+        mainWindow &&
+          mainWindow.webContents.send("fs-change", {
+            event,
+            filename,
+            fullPath,
+          });
+      }
+    );
+
+    watcher.on("error", (err) => {
+      console.error("❌ FS watcher error:", err);
+    });
+
+    return watcher;
   }
-});
+}

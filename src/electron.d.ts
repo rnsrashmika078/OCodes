@@ -7,6 +7,12 @@ declare global {
     electronAPI: {
       getMetadata: (filePath: string) => Promise<any>;
       initializeLLM: () => Promise<String>;
+      onFsChange: (
+        callback: (
+          event: string,
+          data: { event: string; filename: string; fullPath: string }
+        ) => void
+      ) => () => void;
     };
     chatgpt: {
       ask: (prompt: string) => Promise<Reply>;
@@ -26,11 +32,33 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => void; // called when update downloaded
     };
     fsmodule: {
+      create: (
+        filepath?: string,
+        code?: string
+      ) => Promise<{
+        success: boolean;
+        id: string;
+        content?: string;
+        filePath: string;
+        name: string;
+        type: string;
+      }>;
       createFile: (
         content?: string,
         filepath?: string,
         fileName?: string,
         method?: string
+      ) => Promise<{
+        id: string;
+        success: boolean;
+        filePath: string;
+        name: string;
+        type: string;
+      }>;
+      saveFile: (
+        content?: string,
+        filepath?: string,
+        fileName?: string
       ) => Promise<{
         id: string;
         success: boolean;
@@ -46,6 +74,7 @@ declare global {
         type: string;
       }>;
       pick: () => Promise<FilePath>;
+      refreshProject: (folderPath: string) => Promise<FilePath>;
       openFile: (filePath: string) => Promise<string>;
     };
   }

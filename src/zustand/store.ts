@@ -49,6 +49,7 @@ type ChatStore = {
   setCloseFile: (fileId: string) => void;
   setCreateFile: (file: OpenFile) => void;
   setActiveFile: (file: OpenFile | null) => void;
+  setUpdateActiveFile: (content: string) => void;
   setUpdateOpenFiles: (file: OpenFile) => void;
   setClickedFileCurrentPath: (path: string | null) => void;
 };
@@ -163,7 +164,10 @@ export const useChatClone = create<ChatStore>((set) => ({
         f?.id === file.id ? { ...f, ...file } : f
       ),
     })),
-
+  setUpdateActiveFile: (content) =>
+    set((state) => ({
+      activeFile: state.activeFile ? { ...state.activeFile, content } : null,
+    })),
   setClickedFileCurrentPath: (path) =>
     set(() => ({
       clickedFileCurrentPath: path,

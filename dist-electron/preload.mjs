@@ -29,12 +29,22 @@ electron.contextBridge.exposeInMainWorld("auth", {
   getAuthUser: () => electron.ipcRenderer.invoke("get-auth-user")
 });
 electron.contextBridge.exposeInMainWorld("electronAPI", {
-  initializeLLM: () => electron.ipcRenderer.invoke("run-ollama")
+  initializeLLM: () => electron.ipcRenderer.invoke("run-ollama"),
+  onFsChange: (callback) => {
+    const listener = (_event, data) => callback(data.event, data);
+    electron.ipcRenderer.on("fs-change", listener);
+    return () => {
+      electron.ipcRenderer.removeListener("fs-change", listener);
+    };
+  }
 });
 electron.contextBridge.exposeInMainWorld("fsmodule", {
   createFile: (content, filepath, fileName, method) => electron.ipcRenderer.invoke("create-file", content, filepath, fileName, method),
+  saveFile: (content, filepath, fileName) => electron.ipcRenderer.invoke("save-file", content, filepath, fileName),
+  create: (filepath, code) => electron.ipcRenderer.invoke("create", filepath, code),
   createFolder: (parentPath, folderName) => electron.ipcRenderer.invoke("create-folder", parentPath, folderName),
   pick: () => electron.ipcRenderer.invoke("pick"),
+  refreshProject: (filePath) => electron.ipcRenderer.invoke("read-project", filePath),
   openFile: (filePath) => electron.ipcRenderer.invoke("open", filePath)
 });
 electron.contextBridge.exposeInMainWorld("updater", {

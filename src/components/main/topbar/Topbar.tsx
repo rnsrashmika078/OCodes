@@ -37,18 +37,17 @@ const Topbar = () => {
           "",
           activeFile?.name
         );
-        if (result) {
-          const updatedFile = {
-            id: activeFile?.id ?? "",
-            content: activeFile?.content ?? "",
-            name: result.name ?? "",
-            path: result.filePath ?? "",
-            type: result.type ?? "",
-          };
-          console.log("updatedFile", updatedFile);
-          setUpdateOpenFiles(updatedFile);
-          setUpdateProjectFile(updatedFile);
-        }
+        // if (result) {
+        //   const updatedFile = {
+        //     id: activeFile?.id ?? "",
+        //     content: activeFile?.content ?? "",
+        //     name: result.name ?? "",
+        //     path: result.filePath ?? "",
+        //     type: result.type ?? "",
+        //   };
+        //   setUpdateOpenFiles(updatedFile);
+          // setUpdateProjectFile(updatedFile);
+        // }
         return;
       }
       case "Open": {

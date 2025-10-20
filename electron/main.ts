@@ -9,6 +9,7 @@ import { exec } from "node:child_process";
 import { writeFileSync } from "fs";
 import { join } from "path";
 import { registerFileSystemHandlers } from "./ipcs";
+import { watchProjectDirectory } from "./wrapper/fileWatcher";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -97,6 +98,7 @@ ipcMain.handle("ask-chatgpt", async (_event, prompt) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "llama3.2:latest",
+        // model:"qwen3:8b",
         prompt: prompt,
         stream: false, // no streaming
       }),
@@ -151,6 +153,6 @@ app.on("activate", () => {
 
 app.whenReady().then(() => {
   createWindow();
-  registerFileSystemHandlers();
+  registerFileSystemHandlers(win);
   autoUpdater.checkForUpdatesAndNotify();
 });

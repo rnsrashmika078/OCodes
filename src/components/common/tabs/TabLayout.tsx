@@ -8,6 +8,7 @@ import CodeEditor from "@/components/main/editor/CodeEditor";
 import Preview from "@/components/main/editor/Preview";
 import AskAI from "@/components/ask/AskAI";
 import ChatArea from "@/components/chatarea/ChatArea";
+import Button from "../Button";
 
 interface TabLayout {
   className?: string;
@@ -15,14 +16,15 @@ interface TabLayout {
 
 const TabLayout = ({ className }: TabLayout) => {
   const [activeMouse, setActiveMouse] = useState<boolean>(false);
+  const [turn, setTurn] = useState<boolean>(false);
   const setCloseFile = useChatClone((store) => store.setCloseFile);
   const setActiveFile = useChatClone((store) => store.setActiveFile);
   const openFiles = useChatClone((store) => store.openFiles);
   const activeFile = useChatClone((store) => store.activeFile);
+
   useEffect(() => {
     if (openFiles) {
       const lastFile = openFiles[openFiles.length - 1];
-      //old files
       if (lastFile) {
         const file = {
           id: lastFile?.id,
@@ -47,39 +49,19 @@ const TabLayout = ({ className }: TabLayout) => {
   const handleCloseTab = (fileId: string) => {
     setCloseFile(fileId);
   };
-  // const handleSaveTab = () => {
-  //   if (editTabData) {
-  //     setTabs((tabs) =>
-  //       tabs.map((t: Tabs) =>
-  //         t.id === editTabData.id
-  //           ? {
-  //               ...t,
-  //               title: editTabData.title ? editTabData.title : "",
-  //             }
-  //           : t
-  //       )
-  //     );
-  //   }
-  //   // setCanEdit(false);
-  //   setEditTabData({ title: "", id: 0 });
-  // };
 
-  // useEffect(() => {
-  //   if (tabs.length === 0 && childCount > 0) {
-  //     const id = Date.now();
-  //     const newTabs = Array.from({ length: childCount }, (_, i) => ({
-  //       id: id + i,
-  //       title: `Tab ${i + 1}`,
-  //     }));
-
-  //     setTabs(newTabs);
-  //     setActiveTab(newTabs[0]);
-  //   }
-  // }, [childCount, tabs.length]);
+  const [activeFileContent, setActiveFileContent] = useState<string>(
+    activeFile?.content ?? ""
+  );
+  useEffect(() => {
+    if (activeFileContent !== activeFile?.content) {
+      console.log("Active file content as just changed!");
+    }
+  }, [activeFileContent, activeFile]);
 
   return (
-    <div className={`flex flex-col w-full h-full  ${className}`}>
-      <div className="flex flex-col h-full w-full">
+    <div className={` flex flex-col w-full h-full select-none ${className}`}>
+      <div className="relative flex flex-col h-full w-full">
         <div
           className={` sticky top-0 z-[9999] bg-[#1919197b]  transition-all flex flex-row text-center min-w-md `}
           onMouseEnter={() => setActiveMouse(true)}
@@ -122,18 +104,13 @@ const TabLayout = ({ className }: TabLayout) => {
             </div>
           ))}
         </div>
-        {/* <Preview
-          code={`export default function Test() {
-  return (
-    <div className="p-4">
-      <h1>HI THERE</h1>
-    </div>
-  );
-}`}
-        /> */}
-        {/* <ChatArea /> */}
-        <CodeEditor />
+        <Button name="Switch" onClick={() => setTurn((prev) => !prev)} />
+        <Button name="Save" onClick={() => setTurn((prev) => !prev)} />
+        <div className="w-full h-full">
+          {turn ? <CodeEditor /> : <Preview code={activeFile?.content ?? ""} />}
+        </div>
       </div>
+      {/* <ChatArea /> */}
     </div>
   );
 };
