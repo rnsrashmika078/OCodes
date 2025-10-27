@@ -10,6 +10,7 @@ import { writeFileSync } from "fs";
 import { join } from "path";
 import { registerFileSystemHandlers } from "./ipcs";
 import { watchProjectDirectory } from "./wrapper/fileWatcher";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -83,21 +84,21 @@ function createWindow() {
 
 UserPreference();
 
-ipcMain.handle("ask-chatgpt", async (_event, prompt) => {
+ipcMain.handle("ask-chatgpt", async (_event, prompt, model) => {
   try {
-    // const res = await fetch(
-    //   `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    //   {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    //   }
-    // );
+    const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
+    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+
     const res = await fetch("http://localhost:11434/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "llama3.2:latest",
+        // model: "llama3.2:latest",
+        model,
         // model:"qwen3:8b",
         prompt: prompt,
         stream: false, // no streaming

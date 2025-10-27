@@ -1,6 +1,6 @@
 import Store from "electron-store";
 import { ipcMain } from "electron";
-import { AuthUser } from "@/types/type";
+import { AuthUser } from "@/lib/types/type";
 
 const store = new Store();
 // store.clear();

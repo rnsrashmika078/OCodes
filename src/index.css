@@ -10,7 +10,7 @@
       @apply border-gray-600;
     }
   }
-  /*
+
   h1 {
     @apply text-3xl font-bold;
   }
@@ -20,7 +20,7 @@
   h3 {
     @apply text-xl  mt-0 font-semibold;
   }
- 
+
   ul {
     @apply list-disc pl-6 list-inside;
   }
@@ -31,12 +31,11 @@
     @apply border-l-4 border-gray-400 pl-4 italic text-gray-600 dark:text-gray-300;
   }
   code {
-    @apply  dark:bg-gray-700 rounded px-1 py-0.5 text-sm font-mono;
+    @apply dark:bg-gray-700 rounded px-1 py-0.5 text-sm font-mono;
   }
   a {
     @apply text-blue-600 underline hover:text-blue-800;
   }
-    */
 }
 p {
   color: rgba(255, 255, 255, 0.64);

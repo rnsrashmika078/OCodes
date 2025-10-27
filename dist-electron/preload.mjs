@@ -22,7 +22,7 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   }
 });
 electron.contextBridge.exposeInMainWorld("chatgpt", {
-  ask: (prompt) => electron.ipcRenderer.invoke("ask-chatgpt", prompt)
+  ask: (prompt, model) => electron.ipcRenderer.invoke("ask-chatgpt", prompt, model)
 });
 electron.contextBridge.exposeInMainWorld("auth", {
   setAuthUser: (authUser) => electron.ipcRenderer.send("save-auth-user", authUser),

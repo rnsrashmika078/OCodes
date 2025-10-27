@@ -1,14 +1,7 @@
-import Main from "@/components/main/layout/Layout";
-import { useChatClone } from "@/zustand/store";
-import { useEffect, useState } from "react";
+import Layout2 from "@/components/editor_ui/layout/Layout2";
 
 const Home = () => {
-
-  return (
-    <div>
-      {/* <Main /> */}
-    </div>
-  );
+  return <Layout2 />;
 };
 
 export default Home;

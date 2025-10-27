@@ -1,4 +1,4 @@
-import { useChatClone } from "@/zustand/store";
+import { useEditor } from "@/lib/zustand/store";
 import { useState } from "react";
 
 function NetworkStatus() {

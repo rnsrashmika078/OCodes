@@ -1,4 +1,4 @@
-import { AuthUser, FilePath, Reply } from "./types/type";
+import { AuthUser, FilePath, Reply } from "./lib/types/type";
 
 export {};
 
@@ -15,7 +15,7 @@ declare global {
       ) => () => void;
     };
     chatgpt: {
-      ask: (prompt: string) => Promise<Reply>;
+      ask: (prompt: string, model: string) => Promise<Reply>;
     };
     auth: {
       setAuthUser: (AuthUser: AuthUser) => void;
