@@ -7,7 +7,6 @@ import {
 type PreviewProps = {
   code: string;
 };
-
 const Preview = ({ code }: PreviewProps) => {
   return (
     <div className=" h-full overflow-y-auto">
@@ -17,11 +16,11 @@ const Preview = ({ code }: PreviewProps) => {
         files={{
           "/App.js":
             code ||
-            "export default function App() { return <h1>Hello 🚀</h1> }",
+            "export default function App() { return <h1 className='bg-red-500'>Welcome to the OCode</h1> }",
         }}
       >
         <SandpackLayout style={{ height: "100%" }}>
-          <SandpackPreview  />
+          <SandpackPreview style={{ height: "100%" }} />
         </SandpackLayout>
       </SandpackProvider>
     </div>

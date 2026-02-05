@@ -1,24 +1,35 @@
-import React, { useEffect, useState } from "react";
+import Button from "@/components/custom/Button";
+import { useRef } from "react";
+import { Terminal } from "xterm";
+import "xterm/css/xterm.css";
 
-const ConsoleViewer = () => {
-  const [logs, setLogs] = useState<string[]>([]);
+export default function ConsoleViewer() {
+  const termRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const oldLog = console.log;
-    console.log = (...args) => {
-      const message = args.map((a) => String(a)).join(" ");
-      setLogs((prev) => [...prev, message]);
-      oldLog(...args); // still print to dev console
-    };
-  }, []);
+  const createTerminal = () => {
+    if (!termRef.current) return;
+    const term = new Terminal({
+      fontSize: 14,
+      cursorBlink: true,
+    });
+
+    term.open(termRef.current);
+    window.terminal.create();
+
+    term.onData((data) => {
+      console.log("data", data);
+      term.write(data);
+      window.terminal.write(data);
+    });
+  };
 
   return (
-    <div className="bg-black text-green-400 font-mono p-2 h-full overflow-y-auto">
-      {logs.map((line, i) => (
-        <div key={i}>{line}</div>
-      ))}
+    <div ref={termRef} className="w-full h-full bg-black">
+      <div className="fixed left-0">
+        <Button onClick={() => window.terminal.write("HI THERE")}>
+          Create new terminal
+        </Button>
+      </div>
     </div>
   );
-};
-
-export default ConsoleViewer;
+}

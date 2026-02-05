@@ -56,6 +56,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       // Resolve full path
       const filePath = join(filepath);
 
+      console.log("Filepath", filepath);
       // Ensure directory exists
       const dir = dirname(filePath);
       mkdirSync(dir, { recursive: true });
@@ -71,6 +72,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
         path: filePath,
         type: extname(filePath).replace(".", ""), // e.g. "tsx"
       };
+      console.log("result", result);
 
       return { success: true, ...result };
     } catch (error) {

@@ -1,147 +1,143 @@
-import { useEditor } from "@/lib/zustand/store";
-import { useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ReactMarkdown from "react-markdown";
-import CopyToClipboard from "../../custom/CopyToClipboard";
-import Button from "../../custom/Button";
-import {
-  DropDownLayout,
-  DropDownSection,
-  Item,
-} from "@/components/custom/dropdowns";
+import AskAI from "./AskAI";
 
 const ChatArea = () => {
-  const userMessages = useEditor((store) => store.userMessages);
-  const setCopiedText = useEditor((store) => store.setCopiedText);
-  const activeFile = useEditor((store) => store.activeFile);
-  const setHeight = useEditor((store) => store.setHeight);
-  const setUpdateActiveFile = useEditor((store) => store.setUpdateActiveFile);
-  // handle resize
-  useEffect(() => {
-    const handleResize = () => setHeight(window.innerHeight);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [setHeight]);
-
-  const handleCopy = async (copiedText: string) => {
-    try {
-      if (document.hasFocus()) {
-        await navigator.clipboard.writeText(copiedText);
-        setCopiedText(copiedText);
-      }
-    } catch (error) {
-      alert(error);
-    }
-  };
-
-  const chatContainerRef = useRef<HTMLDivElement | null>(null);
-
-  // auto scroll
-  // useEffect(() => {
-  //   if (!chatContainerRef.current) return;
-
-  //   chatContainerRef.current.scrollTo({
-  //     top: chatContainerRef.current.scrollHeight,
-  //     behavior: "smooth",
-  //   });
-  // }, [userMessages]);
-
-  const [selectItem, setSelectItem] = useState<string>("Select Model");
-  console.log(selectItem);
-
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: "http://localhost:3000/api/chat",
+      headers: { "Content-Type": "application/json" },
+    }),
+  });
+  const [input, setInput] = useState("");
   return (
-    <div
-      className="z-20 h-full relative overflow-x-hidden text-white custom-scrollbar w-full"
-      ref={chatContainerRef}
-    >
-      <DropDownLayout classname="absolute top-0">
-        {selectItem}
-        <DropDownSection
-          select={selectItem}
-          onSelect={(value) => setSelectItem(value)}
+    <div className="flex flex-col w-full max-w-md p-5 mx-auto">
+      {messages?.map((message: UIMessage) => (
+        <div
+          // @ts-expect-error:expect-
+          key={message.id}
+          className={`flex flex-col w-full p-2  custom-scrollbar  ${
+            message.role === "user" ? "items-end " : "items-start "
+          }`}
         >
-          <Item value="Fuck" />
-          <Item value="Suck" />
-          <Item value="Lick" />
-        </DropDownSection>
-      </DropDownLayout>
-      {userMessages?.map((msg, index) => (
-        // @ts-ignore:remove key issue
-        <div key={index} className="w-full">
-          {/* USER MESSAGE */}
-          <div className="py-8 px-1 w-full flex justify-end items-end">
-            <div className="relative ">
-              <p className="relative w-full font-custom shadow-md bg-[#3e3e3e] rounded-xl px-2 py-2">
-                {msg.user}
-              </p>
-              <CopyToClipboard handleCopy={handleCopy} text={msg.user} />
-            </div>
-          </div>
+          {/* <p className="text-[10px] flex w-fit">
+            {message.role === "user" ? "You" : "AI"}
+          </p> */}
+          <div
+            className={` custom-scrollbar  ${
+              message.role === "user" ? "bg-gray-900 p-2 rounded-xl " : " "
+            }`}
+          >
+            {message.parts.map((part: any, i: number) => {
+              console.log(part);
+              switch (part.type) {
+                case "text":
+                  return (
+                    <div
+                      //@ts-expect-error:key error
+                      key={`${message.id}-${i}`}
+                      className="custom-scrollbar"
+                    >
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ children, ...props }) => (
+                            <h1
+                              className="text-white text-2xl font-bold"
+                              {...props}
+                            >
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children, ...props }) => (
+                            <h2
+                              className="text-white text-xl font-semibold"
+                              {...props}
+                            >
+                              {children}
+                            </h2>
+                          ),
+                          p: ({ children, ...props }) => (
+                            <p className="text-white" {...props}>
+                              {children}
+                            </p>
+                          ),
+                          ul: ({ children, ...props }) => (
+                            <ul
+                              className="text-white list-disc ml-5"
+                              {...props}
+                            >
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children, ...props }) => (
+                            <ol className="text-white list-decimal" {...props}>
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children, ...props }) => (
+                            <li className="text-white" {...props}>
+                              {children}
+                            </li>
+                          ),
+                          code({ className, children }) {
+                            const match = /language-(\w+)/.exec(
+                              className || ""
+                            );
 
-          {/* AI MESSAGE */}
-          <div className="justify-start p-5">
-            {msg.ai === "loading" ? (
-              <div className="relative font-custom">
-                <span className="bg-white flex-shrink-0 h-3 w-3 animate-pulse p-2 flex rounded-full"></span>
-              </div>
-            ) : (
-              <div className="whitespace-pre-wrap break-words">
-                <ReactMarkdown
-                  components={{
-                    //@ts-expect-error:inline keyword not identify
-                    code({ node, inline, className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || "");
-                      return !inline && match ? (
-                        <div className="overflow-auto">
-                          <Button
-                            name="Update"
-                            onClick={async () => {
-                              await window.fsmodule.saveFile(
-                                activeFile?.content ?? "",
-                                activeFile?.path,
-                                activeFile?.name
+                            if (match) {
+                              return (
+                                <SyntaxHighlighter
+                                  style={vscDarkPlus}
+                                  language={match[1]}
+                                  PreTag="div"
+                                >
+                                  {String(children).replace(/\n$/, "")}
+                                </SyntaxHighlighter>
                               );
-                              handleCopy(String(children).replace(/\n$/, ""));
-                              setUpdateActiveFile(
-                                String(children).replace(/\n$/, "")
-                              );
-                            }}
-                          />
-                          <SyntaxHighlighter
-                            // @ts-ignore
-                            style={vscDarkPlus}
-                            language={match[1]}
-                            PreTag="div"
-                            customStyle={{
-                              borderRadius: "0.75rem",
-                              padding: "1rem",
-                              fontSize: "0.9rem",
-                              maxWidth: "100%",
-                              overflowX: "auto",
-                            }}
-                            wrapLongLines
-                            {...props}
-                          >
-                            {String(children).replace(/\n$/, "")}
-                          </SyntaxHighlighter>
-                        </div>
-                      ) : (
-                        <code className={className} {...props}>
-                          {children}
-                        </code>
-                      );
-                    },
-                  }}
-                >
-                  {msg.ai}
-                </ReactMarkdown>
-              </div>
-            )}
+                            }
+                            return (
+                              <code className="bg-zinc-600 px-1 rounded">
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {part.text}
+                      </ReactMarkdown>
+                    </div>
+                  );
+                case "tool-weatherTool":
+                  return <p>{JSON.stringify(part.output)}</p>;
+              }
+            })}
           </div>
         </div>
       ))}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput("");
+        }}
+      >
+        {/* <div className="fixed bottom-0 w-full p-2 rounded shadow-xl">
+          <AskAI />
+        </div> */}
+        <input
+          className="fixed  dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={(e) => setInput(e.currentTarget.value)}
+        />
+      </form>
     </div>
   );
 };

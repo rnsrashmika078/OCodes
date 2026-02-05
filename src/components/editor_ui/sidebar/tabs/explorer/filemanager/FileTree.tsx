@@ -21,13 +21,8 @@ export const FileTree = ({
 }) => {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [nodeName, setNodeName] = useState<string>("");
-  const [isAddingNew, setIsAddingNew] = useState<string>("");
   const setProject = useEditor((store) => store.setProject);
-  const wholeProject = useEditor((store) => store.project);
-  const activeFile = useEditor((store) => store.activeFile);
-  const setInsertFolderToProject = useEditor(
-    (store) => store.setInsertFolderToProject
-  );
+ 
   const setClickedFileCurrentPath = useEditor(
     (store) => store.setClickedFileCurrentPath
   );
@@ -55,7 +50,6 @@ export const FileTree = ({
     }
   };
 
-  useEffect(() => {}, []);
   const handleClickIcon = async (iconName: string) => {
     switch (iconName) {
       case "create-new-file": {

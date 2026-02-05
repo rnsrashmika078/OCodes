@@ -4,22 +4,20 @@ import { MdRecordVoiceOver } from "react-icons/md";
 import { FaArrowUp } from "react-icons/fa6";
 import { useEditor } from "@/lib/zustand/store";
 import { v4 as uuidv4 } from "uuid";
+import { useGlobalContext } from "@/lib/context/GlobalContext";
+import { z } from "zod";
+import { parse } from "jsonc-parser";
 
 interface ASKAI {
   toggleSidebar?: (state?: boolean) => void;
 }
 const AskAI = ({ toggleSidebar }: ASKAI) => {
-  // type HoverItem = {
-  //   name: string;
-  //   isHover: boolean;
-  // };
-  //states
+  const { conversation, setConversation } = useGlobalContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [searchText, setSearchText] = useState<string>("");
-  // const [hoverItem, setHoverItem] = useState<HoverItem | null>(null);
 
   //zustand - global states
-  const setUserMessages = useEditor((store) => store.setUserMessages);
+  // const setUserMessages = useEditor((store) => store.setUserMessages);
   const setNotification = useEditor((store) => store.setNotification);
   const setTrackId = useEditor((store) => store.setTrackId);
   const trackId = useEditor((store) => store.trackId);
@@ -30,7 +28,6 @@ const AskAI = ({ toggleSidebar }: ASKAI) => {
   const project = useEditor((store) => store.project);
   const activeFile = useEditor((store) => store.activeFile);
   const setUpdateOpenFiles = useEditor((store) => store.setUpdateOpenFiles);
-
   const setUpdateProjectFile = useEditor((store) => store.setUpdateProjectFile);
 
   const handleSearch = (text: string) => {
@@ -54,110 +51,125 @@ const AskAI = ({ toggleSidebar }: ASKAI) => {
     let id = trackId ?? uuidv4();
     let messageId = uuidv4();
 
-    setUserMessages({
-      chatId: trackId ?? id,
-      messageId,
-      user: prompt,
-      ai: "loading",
-    });
+    setConversation((prev) => [
+      ...prev,
+      { chatId: trackId ?? id, message: prompt, messageId, role: "user" },
+    ]);
 
     setSearchText("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
 
-    const historyText =
-      userMessages && userMessages.length > 0
-        ? userMessages
-            .map((msg) => `User: ${msg.user}\nAI: ${msg.ai}`)
-            .join("\n\n")
-        : "No previous messages.";
-    const modifiedPrompt = `
-     You are OzoneGPT, an AI coding assistant in a code generator application called OCode.
-PRIORITY RULES (must follow in order):
+    const modifiedPrompt = `YOU ARE OzoneGPT, an AI coding assistant.
 
-before reply, check the project file : ${project ?? "null"}
-if project file is null then request the user with reply "Please Choose a project file before proceeds"
-and guide user with steps below to create or open a project file with bullets points.
- 1.Go to Explorer.
- 2.Navigate and Click Open Folder to open a project
-and then stop reply from here.
-1. Detect User Intent:
-   - If user explicitly asks to CREATE A COMPONENT (trigger phrases: "create this component", "create component", "make component", "generate component"):
-          - Start with a short "Topics:" line listing what you will do.
-       - Output the component info in structured format:
-           - ComponentName: <ComponentName>
-           - FolderName: <ComponentName>
-           - FilePath: <ComponentName>.<extension>
-       - Briefly describe what you are doing.
-       - Output the file content inside a code block with language tag.
-   - if file already created  (user intent is likely code update, bug fix, or explanation):
-       - Start with: Updating a file...
-       - Output only the updated code inside a fenced code block.
-       - Include a short note "Update:" if needed.
-       - Skip component creation steps entirely.
+    PROJECT PATH: ${JSON.stringify(project?.path)}
+    CURRENT OPEN FILE: ${JSON.stringify(activeFile)}
 
-2. Non-code replies:
-   - Start with a short "Topics:" line listing what you will do.
-   - Then 1–2 sentence plan.
-   - If user message is unrelated to code/project context, reply exactly:
-      "please ask me a question related to the coding"
-
-3. Always keep outputs concise, well-formatted, and structured so a script can parse ComponentName, FolderPath, and FilePath.
-
--> If history is empty, use this -> ${
-      activeFile?.content
-    }. This contains the currently open file code.
-   
-        - Project structure : ${project}
-        - Chat history : ${historyText}
-        - User message : ${prompt}
-`;
+    if Project Path is null then output please choose project and end immediately
+    and if the current Open file exist then update that file if user intention is to update.
+    STRICT OUTPUT RULES:
+    - Return ONLY  VALID JSON.
+    - NO markdown fences, NO explanations.
+    - JSON must be strictly parsable by JSON.parse().
+    
+    JSON FORMAT:
+    {
+      "title": "string",
+      "reply": "string",
+      "code": string (JSON-escaped),
+      "filePath": "string or null"
+      "Task" : "string" -> if file updating set this to "Updating" , if not "Creating" 
+    }
+    
+    CODE ENCODING RULES:
+    - The "code" value MUST be a single string where:
+      1. All newlines are replaced with \\n.
+      2. All double quotes are escaped with \\.
+      3. The code is a complete, self-contained React component.
+      4. The filePath structure: \\src\\component\\{componentName}.{extension} 
+      5. for styling use inline css.
+    
+    BEHAVIOR:
+    - Coding task: Provide full component code and filePath.
+    - Non-coding task: Set code and filePath to null.
+    
+    CONTEXT:
+    ... USER PROMPT:${JSON.stringify(prompt)}
+    ... Previous Chat: ${JSON.stringify(conversation)}
+    `;
     if (modifiedPrompt) {
       const askFromAI = async () => {
-        const reply = await window.chatgpt.ask(modifiedPrompt, model);
+        const reply = await window.chatgpt.ask(modifiedPrompt, "");
+        const newMessageId = uuidv4();
 
-        if (reply.error) {
+        if (!reply) return;
+        if (reply?.error) {
           setNotification(reply.message);
         }
-        if (!reply) return;
-        const aiMessage = reply.message;
-        const rawMessage = aiMessage;
-        if (!trackId && !activeChat?.chatId) {
-          const title = aiMessage.split("*$$*")[1] || "Chat";
-          const chatData = { chatId: id, title: title };
-          setChat(chatData);
-          setUpdateMessage(messageId, rawMessage);
-          setTrackId(id);
-          return;
-        }
-        setUpdateMessage(messageId, rawMessage);
+
+        setConversation((prev) => [
+          ...prev,
+          {
+            chatId: trackId ?? id,
+            message: reply.message,
+            messageId: newMessageId,
+            role: "assistant",
+          },
+        ]);
+
+        // const aiMessage = reply.message;
+        // const rawMessage = aiMessage;
+        // if (!trackId && !activeChat?.chatId) {
+        //   const title = aiMessage.split("*$$*")[1] || "Chat";
+        //   const chatData = { chatId: id, title: title };
+        //   setChat(chatData);
+        //   setUpdateMessage(messageId, rawMessage);
+        //   setTrackId(id);
+        //   return;
+        // }
+        // setUpdateMessage(messageId, rawMessage);
       };
       askFromAI();
     }
   };
 
   useEffect(() => {
-    const lastMessage =
-      userMessages && userMessages[userMessages.length - 1]?.ai;
+    const lastMessage = conversation.at(-1);
 
     if (!lastMessage) return;
+    const data = parse(lastMessage?.message);
+
+    if (!data) return;
+    console.log(data.code);
+
+    // const OCodeSchema = z.object({
+    //   title: z.string(),
+    //   reply: z.string(),
+    //   // filePath: z.string().optional().nullable(),
+    //   code: z.string().optional().nullable(),
+    // });
+    // const result = OCodeSchema.safeParse(data);
+    // console.log("result", result);
+    // if (!result.data) return;
+    // console.log("file path", result.data.filePath);
 
     // Regex extractions
-    const folderNameMatch = lastMessage.match(/FolderName:\s*(.*)/);
-    const filePathMatch = lastMessage.match(/FilePath:\s*(.*)/);
-    const code = lastMessage.split("```")[1];
-    const cleanedCode = code?.split("\n")?.slice(1)?.join("\n");
 
-    const folderName = folderNameMatch ? folderNameMatch[1].trim() : "";
-    const filePath = filePathMatch ? filePathMatch[1].trim() : "";
+    // const folderNameMatch = lastMessage.match(/FolderName:\s*(.*)/);
+    // const filePathMatch = lastMessage.match(/FilePath:\s*(.*)/);
+    // const code = lastMessage.split("```")[1];
+    // const cleanedCode = code?.split("\n")?.slice(1)?.join("\n");
 
-    const newfilePath = project?.path + `\\src\\${folderName}\\${filePath}`;
+    // const folderName = folderNameMatch ? folderNameMatch[1].trim() : "";
+    // const filePath = filePathMatch ? filePathMatch[1].trim() : "";
+
+    const newfilePath = project?.path + data.filePath;
     const CreateFile = async () => {
-      if (!filePath) {
+      if (!data.filePath) {
         return;
       }
-      const result = await window.fsmodule.create(newfilePath, cleanedCode);
+      const result = await window.fsmodule.create(newfilePath, data.code);
 
       if (result) {
         const updatedFile = {
@@ -173,7 +185,7 @@ and then stop reply from here.
     };
 
     CreateFile();
-  }, [userMessages]);
+  }, [conversation]);
 
   return (
     <div className=" relative flex items-end w-full  bg-[#313131] rounded-2xl shadow-xl">
@@ -182,7 +194,7 @@ and then stop reply from here.
           <BsPlus color="white" size={28} />
         </span>
       </div>
-     
+
       <textarea
         ref={textareaRef}
         value={searchText}

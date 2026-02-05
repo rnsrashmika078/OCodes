@@ -62,10 +62,17 @@ contextBridge.exposeInMainWorld("fsmodule", {
   pick: () => ipcRenderer.invoke("pick"),
   refreshProject: (filePath: string) =>
     ipcRenderer.invoke("read-project", filePath),
-
   openFile: (filePath: string) => ipcRenderer.invoke("open", filePath),
 });
-
+//create a
+// contextBridge.exposeInMainWorld("terminal", {
+//   create: () => ipcRenderer.invoke("terminal-create"),
+//   write: (data: string) => ipcRenderer.send("terminal-write", data),
+//   onOutput: (callback: (data: string) => void) =>
+//     ipcRenderer.on("terminal-output", (_e, data) => callback(data)),
+//   resize: (cols: number, rows: number) =>
+//     ipcRenderer.send("terminal-resize", cols, rows),
+// });
 contextBridge.exposeInMainWorld("updater", {
   // Trigger update check
   checkForUpdate: () => ipcRenderer.send("check_for_update"),

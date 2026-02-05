@@ -1,4 +1,4 @@
-import{ useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { RiCloseFill } from "react-icons/ri";
 import { useEditor } from "@/lib/zustand/store";
 import CodeEditor from "@/components/editor_ui/editor/CodeEditor";
@@ -51,7 +51,7 @@ const TabLayout = ({ className }: TabLayout) => {
   );
   useEffect(() => {
     if (activeFileContent !== activeFile?.content) {
-      console.log("Active file content as just changed!");
+      setActiveFileContent(activeFile?.content!);
     }
   }, [activeFileContent, activeFile]);
 
@@ -117,7 +117,9 @@ const TabLayout = ({ className }: TabLayout) => {
           {turn === "code" ? (
             <CodeEditor />
           ) : (
-            <Preview code={activeFile?.content ?? ""} />
+            <div className="w-full h-full">
+              <Preview code={activeFile?.content ?? ""} />
+            </div>
           )}
         </div>
       </div>

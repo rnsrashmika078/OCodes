@@ -11,7 +11,7 @@ import TabLayout from "@/components/custom/tabs_ui/TabLayout";
 import ConsoleViewer from "@/components/editor_ui/editor/ConsoleViewer";
 import ChatArea from "@/components/editor_ui/ai/ChatArea";
 import { useState } from "react";
-import TopBar from "@/components/editor_ui/topbar/Topbar";
+import TopBar from "@/components/editor_ui/topbar/topbar";
 const EditorUI = () => {
   //toggling ai chat area
   const [toggleState, setToggleState] = useState<boolean>(false);
@@ -31,10 +31,8 @@ const EditorUI = () => {
         <div className="flex w-full h-full">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={20} maxSize={50} minSize={0}>
-              <div className="flex flex-col flex-1 w-full h-full overflow-hidden">
-                <div className="flex-1 custom-scrollbar h-full w-[300px]">
-                  <Explorer />
-                </div>
+              <div className="custom-scrollbar h-full w-full">
+                <Explorer />
               </div>
             </ResizablePanel>
             <ResizableHandle className="bg-gray-600" />
@@ -52,7 +50,7 @@ const EditorUI = () => {
                   <div className="flex flex-col flex-1 w-full h-full">
                     <div className="flex-1  custom-scrollbar h-full w-full">
                       <div className="bg-black text-green-400 font-mono p-2 h-full overflow-y-auto">
-                        <ConsoleViewer />
+                        {/* <ConsoleViewer /> */}
                       </div>
                     </div>
                   </div>
@@ -64,12 +62,12 @@ const EditorUI = () => {
               <ResizablePanel>
                 <div className="w-full h-full">
                   <div className="relative w-full h-full">
-                    <div className="absolute w-full h-[650px] overflow-y-auto">
+                    <div className="absolute w-full h-full custom-scrollbar">
                       <ChatArea />
                     </div>{" "}
-                    <div className="absolute bottom-0 w-full p-5">
+                    {/* <div className="absolute bottom-0 w-full p-5">
                       <AskAI />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </ResizablePanel>

@@ -6,12 +6,22 @@ import path from "node:path";
 import dotenv from "dotenv";
 import { UserPreference } from "./storage";
 import { exec } from "node:child_process";
-import { writeFileSync } from "fs";
-import { join } from "path";
 import { registerFileSystemHandlers } from "./ipcs";
-import { watchProjectDirectory } from "./wrapper/fileWatcher";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { OpenAI } from "openai";
+import { Groq } from "groq-sdk";
+import { handleFileOperations } from "./ipcs/fileOperations";
+// const groq = new Groq();
 
+// import pty from "@homebridge/node-pty-prebuilt-multiarch";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+// import "./terminal/terminal"; // ← THIS IS THE MAGIC LINE
+// import {
+//   registerTermial,
+//   setMainWindow,
+//   setTerminalWindow,
+// } from "./terminal/terminal";
+
+// terminal paths
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
@@ -27,6 +37,8 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null;
 
+//terminal
+
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
@@ -41,7 +53,7 @@ function createWindow() {
     autoHideMenuBar: true,
     // frame: false,
   });
-
+  // setMainWindow(win);
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
   });
@@ -51,82 +63,7 @@ function createWindow() {
   } else {
     win.loadURL(`file://${path.join(RENDERER_DIST, "index.html")}`);
   }
-
-  // ✅ AutoUpdater events
-  autoUpdater.on("checking-for-update", () => {
-    console.log("Checking for update...");
-    win?.webContents.send("checking_for_update");
-  });
-
-  autoUpdater.on("update-available", (info) => {
-    console.log("Update available!", info);
-    win?.webContents.send("update_available", info);
-  });
-
-  autoUpdater.on("update-not-available", (info) => {
-    console.log("No updates available.");
-    win?.webContents.send("update_not_available", info);
-  });
-
-  autoUpdater.on("error", (err) => {
-    console.error("Update failed:", err);
-    win?.webContents.send(
-      "update_error",
-      err == null ? "unknown" : err.message || err
-    );
-  });
-
-  autoUpdater.on("update-downloaded", (info) => {
-    console.log("Update downloaded. Ready to install.");
-    win?.webContents.send("update_downloaded", info);
-  });
 }
-
-UserPreference();
-
-ipcMain.handle("ask-chatgpt", async (_event, prompt, model) => {
-  try {
-    const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-
-    const res = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // model: "llama3.2:latest",
-        model,
-        // model:"qwen3:8b",
-        prompt: prompt,
-        stream: false, // no streaming
-      }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      return {
-        error: true,
-        status: res.status,
-        message: errorData?.error?.message || "Request failed",
-      };
-    }
-
-    const text = data.response;
-    return { error: false, message: text || "No reply received" };
-  } catch (error) {
-    return {
-      error: true,
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
-});
-
-//ipc function for run the llm
 
 ipcMain.handle("run-ollama", async () => {
   return new Promise((resolve, reject) => {
@@ -139,6 +76,7 @@ ipcMain.handle("run-ollama", async () => {
     );
   });
 });
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
@@ -153,7 +91,10 @@ app.on("activate", () => {
 });
 
 app.whenReady().then(() => {
-  createWindow();
-  registerFileSystemHandlers(win);
+  // GenerateTerminalWindow();
+  // createWindow();
+  UserPreference();
+  // registerFileSystemHandlers(win);
+  handleFileOperations(win);
   autoUpdater.checkForUpdatesAndNotify();
 });

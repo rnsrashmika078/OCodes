@@ -31,6 +31,13 @@ declare global {
       ) => void;
       onUpdateDownloaded: (callback: () => void) => void; // called when update downloaded
     };
+    terminal: {
+      create: () => Promise<boolean>;
+      write: (data: string) => void;
+      onOutput: (callback: (data: string) => void) => void; // FIXED    //re factered - 4.36
+      resize?: (cols: number, rows: number) => void;
+    };
+
     fsmodule: {
       create: (
         filepath?: string,

@@ -1,14 +1,10 @@
-export interface UserMessage {
+export interface Conversation {
   messageId: string;
   chatId: string;
-  // messageId: string;
-  // from: From;
   title?: string;
-  user: string;
-  ai: string;
-  // message: string;
+  role: string;
+  message: string;
   time?: Date;
-  loading?: boolean;
 }
 export interface AuthUser {
   id: string;
@@ -26,7 +22,6 @@ export interface Reply {
   error: boolean;
   message: string;
 }
-
 export interface UserPreference {
   netstats: boolean;
   authstats: boolean;
@@ -42,13 +37,10 @@ export interface FilePath {
   path: string;
   tree: Tree[];
 }
-
 export interface OpenFile {
   id: string;
   name: string;
   content: string;
   path: string;
   type: string;
-
 }
-

@@ -16,8 +16,8 @@ const Explorer = () => {
         {/* header ends here */}
       </div>
       {/* file manager */}
-      <div className="relative h-full custom-scrollbar-y ">
-        <div className="h-full space-y-2 p-2">
+      <div className="relative h-full custom-scrollbar-y w-full  flex-shrink-0">
+        <div className="h-full space-y-2 p-2  flex-shrink-0">
           <FileTree nodes={project?.tree} project={project} />
         </div>
       </div>

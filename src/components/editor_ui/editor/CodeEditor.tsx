@@ -37,7 +37,6 @@ const CodeEditor = () => {
         activeFile?.name
       );
       setUpdateActiveFile(debounceCodeEditorText.toString() ?? "");
-      console.log("save file done");
       // if (project) {
       //   setProject(await window.fsmodule.refreshProject(project.path));
       // }
