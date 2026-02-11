@@ -10,6 +10,7 @@ export function ollamaQuery() {
       const result = await generateText({
         model: groq("llama-3.3-70b-versatile"),
         system: `
+        You are a coding agent.
         Use tools when needed.
         After a tool runs, you MUST explain the result in the final answer.
         `,
