@@ -15,7 +15,7 @@ declare global {
       ) => () => void;
     };
     chatgpt: {
-      ask: (prompt: string, model: string) => Promise<Reply>;
+      ask: (prompt: string) => Promise<Reply>;
     };
     auth: {
       setAuthUser: (AuthUser: AuthUser) => void;

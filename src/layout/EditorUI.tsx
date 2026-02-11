@@ -65,9 +65,9 @@ const EditorUI = () => {
                     <div className="absolute w-full h-full custom-scrollbar">
                       <ChatArea />
                     </div>{" "}
-                    {/* <div className="absolute bottom-0 w-full p-5">
-                      <AskAI />
-                    </div> */}
+                    <div className="absolute bottom-0 w-full p-5">
+                      {/* <AskAI /> */}
+                    </div>
                   </div>
                 </div>
               </ResizablePanel>

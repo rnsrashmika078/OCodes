@@ -24,8 +24,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 });
 
 contextBridge.exposeInMainWorld("chatgpt", {
-  ask: (prompt: string, model: string) =>
-    ipcRenderer.invoke("ask-chatgpt", prompt, model),
+  ask: (prompt: string) => ipcRenderer.invoke("ask-chatgpt", prompt),
 });
 contextBridge.exposeInMainWorld("auth", {
   setAuthUser: (authUser: AuthUser) =>
@@ -64,36 +63,5 @@ contextBridge.exposeInMainWorld("fsmodule", {
     ipcRenderer.invoke("read-project", filePath),
   openFile: (filePath: string) => ipcRenderer.invoke("open", filePath),
 });
-//create a
-// contextBridge.exposeInMainWorld("terminal", {
-//   create: () => ipcRenderer.invoke("terminal-create"),
-//   write: (data: string) => ipcRenderer.send("terminal-write", data),
-//   onOutput: (callback: (data: string) => void) =>
-//     ipcRenderer.on("terminal-output", (_e, data) => callback(data)),
-//   resize: (cols: number, rows: number) =>
-//     ipcRenderer.send("terminal-resize", cols, rows),
-// });
-contextBridge.exposeInMainWorld("updater", {
-  // Trigger update check
-  checkForUpdate: () => ipcRenderer.send("check_for_update"),
 
-  // Install downloaded update
-  installUpdate: () => ipcRenderer.send("install_update"),
-
-  // Update lifecycle listeners
-  onChecking: (callback: () => void) =>
-    ipcRenderer.on("checking_for_update", callback),
-
-  onUpdateAvailable: (callback: (_event: any, info: any) => void) =>
-    ipcRenderer.on("update_available", callback),
-
-  onUpdateNotAvailable: (callback: (_event: any, info: any) => void) =>
-    ipcRenderer.on("update_not_available", callback),
-
-  onUpdateDownloaded: (callback: (_event: any, info: any) => void) =>
-    ipcRenderer.on("update_downloaded", callback),
-
-  onError: (callback: (_event: any, error: any) => void) =>
-    ipcRenderer.on("update_error", callback),
-});
-console.log("preload loaded");
+// console.log("preload loaded");

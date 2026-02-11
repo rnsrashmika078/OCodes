@@ -1,27 +1,15 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { autoUpdater } from "electron-updater";
 import path from "node:path";
 import dotenv from "dotenv";
 import { UserPreference } from "./storage";
-import { exec } from "node:child_process";
-import { registerFileSystemHandlers } from "./ipcs";
-import { OpenAI } from "openai";
-import { Groq } from "groq-sdk";
-import { handleFileOperations } from "./ipcs/fileOperations";
-// const groq = new Groq();
+import { ollamaQuery } from "./ipcs/llmOperation";
+//@ts-expect-error:
+import { startChatServer } from "./express/server.js";
+import "dotenv/config";
 
-// import pty from "@homebridge/node-pty-prebuilt-multiarch";
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-// import "./terminal/terminal"; // ← THIS IS THE MAGIC LINE
-// import {
-//   registerTermial,
-//   setMainWindow,
-//   setTerminalWindow,
-// } from "./terminal/terminal";
-
-// terminal paths
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
@@ -65,18 +53,6 @@ function createWindow() {
   }
 }
 
-ipcMain.handle("run-ollama", async () => {
-  return new Promise((resolve, reject) => {
-    exec(
-      "C:\\Users\\Rashm\\OneDrive\\Desktop\\initLLM.bat",
-      (err, stdout, _stderr) => {
-        if (err) return reject(err.message);
-        resolve(stdout || "Script executed.");
-      }
-    );
-  });
-});
-
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
@@ -92,9 +68,13 @@ app.on("activate", () => {
 
 app.whenReady().then(() => {
   // GenerateTerminalWindow();
-  // createWindow();
+  // startChatServer(3000);
+  createWindow();
   UserPreference();
+  ollamaQuery();
+
   // registerFileSystemHandlers(win);
-  handleFileOperations(win);
+  // handleFileOperations(win);
+
   autoUpdater.checkForUpdatesAndNotify();
 });
