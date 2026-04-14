@@ -29,44 +29,53 @@ const ChatArea = () => {
   };
   const [messages, setMessage] = useState<UserPrompt[]>([]);
 
-  const handleSendMessage = async (prompt: string) => {
-    const query = prompt;
+  const request = async (prompt: string) => {
     setSearchText("");
     setMessage((prev) => [
       ...prev,
-      { id: uuid(), role: "user", message: query, type: "text" },
+      { id: uuid(), role: "user", message: prompt, type: "text" },
     ]);
-    const result = await window.chatgpt.ask(query);
-    if (result.toolResults.length > 0) {
-      //@ts-expect-error:
-      const output = result.toolResults[0].output?.message;
-      //@ts-expect-error:
-      const content = result.toolResults[0].input?.content;
-      setMessage((prev) => [
-        ...prev,
-        {
-          id: uuid(),
-          role: "assistant",
-          message: result.text,
-          type: "tool",
-          output_message: output,
-          content,
-        },
-      ]);
-      return;
-    }
+
+    const res = await fetch("http://localhost:8000/request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ request: prompt }),
+    });
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    const aiUUID = uuid();
     setMessage((prev) => [
       ...prev,
-      { id: uuid(), role: "assistant", message: result.text, type: "text" },
+      { id: aiUUID, role: "assistant", message: "", type: "text" },
     ]);
+    let result = "";
+    while (true) {
+      if (!reader) return;
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+
+      result += chunk;
+
+      setMessage((prev) =>
+        prev.map((msg) =>
+          msg.id === aiUUID ? { ...msg, message: result } : msg,
+        ),
+      );
+    }
   };
+
   return (
-    // <div className="flex flex-col justify-between w-full h-full max-w-md p-5 mx-auto">
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
       <div className="h-[625px] flex flex-col custom-scrollbar  p-5 ">
         {messages?.map((msg) => (
           <div
-            //@ts-expect-error:key error
             key={msg.id}
             className={`flex flex-col  w-full p-2 ${
               msg.role === "user" ? "items-end" : "justify-start"
@@ -86,22 +95,22 @@ const ChatArea = () => {
                   </h2>
                 ),
                 p: ({ children, ...props }) => (
-                  <p className="text-white mt-5 mb-5" {...props}>
+                  <p className="text-white" {...props}>
                     {children}
                   </p>
                 ),
                 ul: ({ children, ...props }) => (
-                  <ul className="text-white list-disc ml-5" {...props}>
+                  <ul className="text-white list-disc " {...props}>
                     {children}
                   </ul>
                 ),
                 ol: ({ children, ...props }) => (
-                  <ol className="text-white list-decimal" {...props}>
+                  <ol className="text-white list-decimal " {...props}>
                     {children}
                   </ol>
                 ),
                 li: ({ children, ...props }) => (
-                  <li className="text-white" {...props}>
+                  <li className="text-white " {...props}>
                     {children}
                   </li>
                 ),
@@ -120,16 +129,17 @@ const ChatArea = () => {
                     );
                   }
                   return (
-                    <code className="bg-zinc-600 px-1 rounded">{children}</code>
+                    <code className="text-white  rounded">{children}</code>
                   );
                 },
               }}
             >
-              {msg.type === "tool"
+              {/* {msg.type === "tool"
                 ? `**Tool output:** ${msg.output_message ?? ""}\n\n\`\`\`jsx\n${
                     msg.content ?? ""
                   }\n\`\`\``
-                : msg.message}
+                : msg.message} */}
+              {msg.message}
             </ReactMarkdown>
           </div>
         ))}
@@ -137,7 +147,7 @@ const ChatArea = () => {
       <div className="p-5">
         <AskAI
           searchText={searchText}
-          handleClick={(search) => handleSendMessage(search)}
+          handleClick={(search) => request(search)}
           setSearchText={setSearchText}
         />
       </div>

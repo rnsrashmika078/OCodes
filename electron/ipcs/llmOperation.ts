@@ -12,7 +12,8 @@ export function ollamaQuery() {
         system: `
         You are a coding agent.
         Use tools when needed.
-        After a tool runs, you MUST explain the result in the final answer.
+        always give very short answer.
+       
         `,
         prompt: prompt,
         tools: {
@@ -25,6 +26,7 @@ export function ollamaQuery() {
       });
 
       console.log("text", result.text);
+      console.log("toolCall", result.toolCalls);
       console.log("toolResults", result.toolResults);
 
       return {
