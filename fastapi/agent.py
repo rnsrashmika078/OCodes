@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -53,14 +54,22 @@ agent = create_agent(
 
 def requestLLM(prompt: str):
     messages.append(HumanMessage(content=prompt))
-
+    tool = ""
     full_response = ""
     for chunk, metadata in agent.stream(
         {"messages": messages},
         stream_mode="messages",
     ):
-        if chunk.content and chunk.type == "AIMessageChunk":
-            full_response += chunk.content
-            yield chunk.content
+        if chunk.type == "AIMessageChunk":
+            if chunk.tool_calls:
+                tool = chunk.tool_calls
 
+            print(f"tools , {tool}")
+           
+            if chunk.content and chunk.type == "AIMessageChunk" or chunk.type == "tool":
+                full_response += chunk.content
+                yield json.dumps(
+                    {"message": chunk.content, "type": "tool", "content": tool}
+                ) + "\n"
+    # if chunk.type == "tool":
     messages.append(AIMessage(content=full_response))

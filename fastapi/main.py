@@ -25,4 +25,3 @@ def request_llm_answer(data: RequestBody):
         return StreamingResponse(requestLLM(data.request), media_type="text/plain")
     except:
         print("error while generate response")
-    # return requestLLM(data.request)

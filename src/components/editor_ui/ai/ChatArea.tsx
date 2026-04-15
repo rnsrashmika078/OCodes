@@ -1,30 +1,22 @@
-import { useChat } from "@ai-sdk/react";
-import { SetStateAction, useState } from "react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { useState } from "react";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ReactMarkdown from "react-markdown";
 import { v4 as uuid } from "uuid";
 import AskAI from "./AskAI";
+import { CgSpinner } from "react-icons/cg";
+import Assistant from "@/components/generative_component/Assistant";
+import Time from "@/components/generative_component/Time";
 
 const ChatArea = () => {
-  // const { messages, sendMessage } = useChat({
-  //   transport: new DefaultChatTransport({
-  //     // api: "http://localhost:3000/api/chat",
-  //     api: `${import.meta.env.VITE_PATH!}/api/chat`,
-  //     // api: "http://localhost:3000/api/chat",
-  //     headers: { "Content-Type": "application/json" },
-  //   }),
-  // });
-
   const [searchText, setSearchText] = useState("");
   type UserPrompt = {
     id: string;
     role: "assistant" | "user";
     message: string;
     type: "tool" | "text";
-    content?: string;
+    content?: any[];
     output_message?: string;
   };
   const [messages, setMessage] = useState<UserPrompt[]>([]);
@@ -50,30 +42,47 @@ const ChatArea = () => {
     const aiUUID = uuid();
     setMessage((prev) => [
       ...prev,
-      { id: aiUUID, role: "assistant", message: "", type: "text" },
+      { id: aiUUID, role: "assistant", message: "loading", type: "text" },
     ]);
     let result = "";
+    let buffer = "";
+
     while (true) {
+
       if (!reader) return;
       const { done, value } = await reader.read();
-
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
+      buffer += decoder.decode(value, { stream: true });
 
-      result += chunk;
+      const parts = buffer.split("\n");
+      buffer = parts.pop() || "";
 
-      setMessage((prev) =>
-        prev.map((msg) =>
-          msg.id === aiUUID ? { ...msg, message: result } : msg,
-        ),
-      );
+      for (const part of parts) {
+        if (!part.trim()) continue;
+
+        const parsed = JSON.parse(part);
+
+        if (parsed.type === "tool") {
+          result += parsed.message;
+
+          setMessage((prev) =>
+            prev.map((msg) =>
+              msg.id === aiUUID
+                ? { ...msg, message: result, content: parsed.content }
+                : msg,
+            ),
+          );
+        }
+
+      }
     }
   };
 
+  console.log("Messages", messages);
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
-      <div className="h-[625px] flex flex-col custom-scrollbar  p-5 ">
+      <div className="h-full flex flex-col custom-scrollbar  p-5 ">
         {messages?.map((msg) => (
           <div
             key={msg.id}
@@ -81,6 +90,15 @@ const ChatArea = () => {
               msg.role === "user" ? "items-end" : "justify-start"
             }`}
           >
+            {msg.role === "assistant" && msg.message.startsWith("loading") && (
+              <div>
+                <CgSpinner className="animate-spin" />
+              </div>
+            )}
+            {/* {msg.content && msg.role === "assistant" && <Assistant />} */}
+            {msg.content && msg.role === "assistant" && (
+              <Time content={msg.content[0]} />
+            )}
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -90,7 +108,7 @@ const ChatArea = () => {
                   </h1>
                 ),
                 h2: ({ children, ...props }) => (
-                  <h2 className="text-white text-xl font-semibold " {...props}>
+                  <h2 className=" text-xl font-semibold " {...props}>
                     {children}
                   </h2>
                 ),
@@ -99,13 +117,9 @@ const ChatArea = () => {
                     {children}
                   </p>
                 ),
-                ul: ({ children, ...props }) => (
-                  <ul className="text-white list-disc " {...props}>
-                    {children}
-                  </ul>
-                ),
+                ul: ({ children, ...props }) => <ul {...props}>{children}</ul>,
                 ol: ({ children, ...props }) => (
-                  <ol className="text-white list-decimal " {...props}>
+                  <ol className="text-white " {...props}>
                     {children}
                   </ol>
                 ),
@@ -134,12 +148,7 @@ const ChatArea = () => {
                 },
               }}
             >
-              {/* {msg.type === "tool"
-                ? `**Tool output:** ${msg.output_message ?? ""}\n\n\`\`\`jsx\n${
-                    msg.content ?? ""
-                  }\n\`\`\``
-                : msg.message} */}
-              {msg.message}
+              {msg.message.startsWith("loading") ? "" : msg.message}
             </ReactMarkdown>
           </div>
         ))}
