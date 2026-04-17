@@ -2,74 +2,86 @@ import json
 from typing import Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage, AIMessage
 from langchain.agents import create_agent
 from tools import (
-    code_assistant,
-    create_update_file,
+    normal_chat,
+    generate_chart,
     get_current_time,
+    generate_files_with_python_code,
 )
 from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 
+stop = False
 
 messages = []
+
+
 llm = ChatOllama(
-    model="llama3.1:8b",
+    model="gemma4:e4b",
     temperature=0,
     reasoning=False,
 )
-agent = create_agent(
-    llm,
-    tools=[
-        code_assistant,
-        get_current_time,
-        create_update_file,
-    ],
-    middleware=[],
-    system_prompt=SystemMessage(
-        content=(
-            "You are a helpful AI Code assistant for debug and generate codes.reply in short answer\n"
-            "If a file is already created earlier in the conversation, ALWAYS reuse the same file name unless the user explicitly asks for a different file.\n"
-            "Do NOT create new files for updates.\n"
-            "Refer full message history and stick to the context"
-            "generated output must be structured as  markdown format.\n"
-            "Call 'get_weather' ONLY when the user explicitly asks about weather.\n"
-            "Call 'get_current_time' ONLY when the user explicitly asks for current time.\n"
-            "Call 'create_update_file' ONLY when the user explicitly asks for create or update a file.\n"
-            "Call 'read_file' ONLY when the user explicitly asks for read a file.\n"
-            "Call 'load_approve' ONLY when the user explicitly asks for loan approve task.\n"
-            "You MUST break complex tasks into multiple tool calls.\n"
-            "If one tool depends on another, call them step by step.\n"
-            "Example:\n"
-            "1. Call get_current_time\n"
-            "2. Then pass result to create_update_file\n"
-            "Never put tool calls as plain text.\n"
-            "for math questions reply the direct answer\n"
-            "Call 'code_assistant' ONLY for normal chats\n"
-        )
-    ),
-)
 
 
-def requestLLM(prompt: str):
+async def initAgent():
+    agent = create_agent(
+        llm,
+        tools=[
+            get_current_time,
+            normal_chat,
+            generate_chart,
+            generate_files_with_python_code,
+        ],
+        middleware=[],
+        system_prompt=SystemMessage(
+            content="You are a coding assistant. Use tools when needed. Never output tool calls as text.\n\n"
+            "TOOLS:\n"
+            "- get_current_time → time queries\n"
+            "- generate_python_code → generate Python code\n"
+            "- generate_chart → charts or visualizations\n"
+            "- normal_chat → general conversation\n\n"
+            "RULES:\n"
+            "- Respond in markdown\n"
+            "- Reuse existing filenames\n"
+            "- Short answers only\n"
+            "- Math → final answer only\n"
+        ),
+    )
+
+    return agent
+
+
+async def requestLLM(prompt: str):
     messages.append(HumanMessage(content=prompt))
     tool = ""
     full_response = ""
-    for chunk, metadata in agent.stream(
+    agent = await initAgent()
+
+    async for chunk, metadata in agent.astream(
         {"messages": messages},
         stream_mode="messages",
     ):
         if chunk.type == "AIMessageChunk":
             if chunk.tool_calls:
                 tool = chunk.tool_calls
-
-            print(f"tools , {tool}")
-           
-            if chunk.content and chunk.type == "AIMessageChunk" or chunk.type == "tool":
-                full_response += chunk.content
                 yield json.dumps(
-                    {"message": chunk.content, "type": "tool", "content": tool}
+                    {
+                        "message": "",
+                        "type": "tool",
+                        "t_name": tool[0]["name"],
+                        "content": tool,
+                    }
                 ) + "\n"
-    # if chunk.type == "tool":
+            elif chunk.content and chunk.type == "AIMessageChunk":
+                yield json.dumps(
+                    {
+                        "message": chunk.content,
+                        "type": "tool",
+                        "content": tool,
+                        "t_name": None,
+                    }
+                ) + "\n"
     messages.append(AIMessage(content=full_response))

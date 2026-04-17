@@ -4,10 +4,11 @@ from zoneinfo import ZoneInfo
 import requests
 from langchain_core.tools import tool
 import os
+from typing import List, Any, Literal, Dict
 
 
 @tool
-def code_assistant(prompt: str) -> str:
+def normal_chat(prompt: str) -> str:
     """casual chat for user prompt"""
     return f"{prompt}"
 
@@ -30,6 +31,26 @@ def dummy_data() -> str:
     # res = requests.get(url, params=params)
     print("dummy data", res.json())
     return res.json()
+
+
+@tool
+def generate_chart(
+    data: List[Dict[str, Any]],
+    type: Literal["pie", "line"],
+    xKey: str,
+    yKey: str,
+) -> str:
+    """
+    Generate a chart based on user asked topic.
+
+
+    Arguments:
+        -data: List of objects (chart data ) ( *** LOWERCASE *** )
+        -type: Chart type ("pie" or "line") ( *** LOWERCASE *** )
+        -xKey: Name for X axis ( example : data is related to sport then xKey is sport ) -> make sure to add relevant name according to the data ( *** LOWERCASE *** )
+        -yKey: Name for Y axis ( example : value ) -> make sure to add relevant name according to the data ( *** LOWERCASE *** )
+    """
+    return f"Chart generated with type={type}, xKey={xKey}, yKey={yKey}"
 
 
 @tool
@@ -58,11 +79,11 @@ def create_update_file(directory: str, fileName: str, content: str) -> str:
     os.makedirs(folder, exist_ok=True)
     path = full_path
 
-    print("home", home)
-    print("Full path", full_path)
-    print("directory", directory)
-    # print("folder", folder)
-    print("content", content)
+    # print("home", home)
+    # print("Full path", full_path)
+    # print("directory", directory)
+    # # print("folder", folder)
+    # print("content", content)
     try:
         if not fileName:
             return {
@@ -123,113 +144,66 @@ def read_file(directory: str, fileName: str) -> str:
 
 
 @tool
-def loan_approve(directory: str, fileName: str) -> str:
-    """read a file or folder ( directory ) on the computer to check the loan approval.
-    if the form meet the required criteria loan must approve.. other wise no approval
-    --if fileName not found .. simple reply file name is required
-
+def generate_files_with_python_code(python_code: str, file_name: str, save_path: str):
+    """generate python code for generate file based on user given input.
+        - Use ONLY FILE_PATH to save files
+        - Do NOT use file_name or hardcoded paths
+        - Assume FILE_PATH is given
+        - Output clean Python code only
     Arguments:
-    - directory: {folderName if any}/{fileName}.{extension} ex:test/file.txt -> don't precede it with like C:
-    - fileName : name of the file with extension . ex: file.txt
-    """
-    home = os.path.expanduser("~")
-    desktop = os.path.join(home, "Desktop")
-    full_path = os.path.join(desktop, directory)
-    path = full_path
-
-    criteria = """
-    Loan Approval Rules (STRICT):
-
-    1. Age Rule:
-    - Applicant age must be strictly greater than 20.
-    - (age > 20)
-
-    2. Income Rule:
-    - Applicant income must be strictly greater than 15000.
-    - (income > 15000)
-
-    3. Vehicle Rule:
-    - Applicant must own strictly less than 2 vehicles.
-    - (vehicles < 2)
-
-    4. Marital Status Rule:
-    - Applicant must be married.
-    - (married == "yes")
-
-    ----------------------------------------
-
-    FINAL DECISION LOGIC:
-
-    - ALL above conditions MUST be TRUE.
-    - If ANY ONE condition is FALSE → Loan MUST be REJECTED.
-    - No partial approval is allowed.
-    - No assumptions: if any field is missing → REJECT the loan.
-
-    ----------------------------------------
-
-    OUTPUT FORMAT:
-
-    Return ONLY one of the following:
-
-    - "APPROVED"
-    - "REJECTED"
-
-    Optionally include reason:
-    Example:
-    - "REJECTED: income condition failed"
-    - "APPROVED: all conditions satisfied"
+        save_path:python code save path must change to this Path: default path : = C:\\Users\\Rashm\\OneDrive\\Desktop\\NEXT JS\\Next\\public/files/
+        python_code: python code snippet for generate file
+        file_name:name for file. example: hello.txt
     """
 
-    print("home", home)
-    print("Full path", full_path)
-    print("directory", directory)
-    print("desktop", desktop)
-    print("fileName", fileName)
+    modified = f"public/files/{file_name}"
+    project_dir = r"C:\Users\Rashm\OneDrive\Desktop\NEXT JS\Next"
+    newPath = os.path.join(project_dir, modified)
+    python_code = f"FILE_PATH = r'{newPath}'\n" + python_code
 
-    try:
-        if not directory:
-            path = os.path.join(desktop, fileName)
-        with open(path, "r") as f:
-            data = f.read()
-            result = check_criteria(data)
-            print("data", result)
-
-        # return f"data read successfully from the file: data:{data}; make decision based on this criteria: {criteria}.give overall score based on overall criteria out of 100( ex: 90)"
-        return {
-            "result": result,
-            # "criteria": criteria,
-            # "result": "<approved or not approved based on criteria>",
-            # "score": "score based on success rate",
-        }
-    except Exception as e:
-        return f"Failed to create file: {e}"
+    for i in range(0, 3):
+        try:
+            print(f"code: {python_code}")
+            exec(python_code, {}, {})
+            return f"successfully created file at {newPath}"
+        except Exception as e:
+            error = str(e)
+            new_code = fix_code(python_code, error)
+            python_code = new_code
+    return f"error while create a file .. try again later: {python_code}"
 
 
-@tool
-def read_directory_tree(directory: str, fileName: str) -> str:
-    """read read directory tree( directory ) as list on the computer.
-    Arguments:
-    - directory: {folderName if any}/{fileName}.{extension} ex:test/file.txt -> don't precede it with like C:
-    """
-    home = os.path.expanduser("~")
-    full_path = os.path.join(home, directory)
-    try:
-        # if not fileName:
-        #     return f"failed to create a folder. fileName not found!‌"
-        items = os.listdir(full_path)
-        # return f"full list directory of ths path: {full_path} is {items}"
-        return items
-    except Exception as e:
-        return f"Failed to create file: {e}"
+def fix_code(code, error):
+    from langchain_ollama import ChatOllama
+
+    llm = ChatOllama(model="gemma4:e4b", temperature=0)
+    prompt = f"""
+    You are a Python code fixer. Return ONLY executable Python code. No explanations. No markdown.
+    FOR EXCEL ONLY:
+        import pandas as pd
+        df = pd.DataFrame(...)
+        df.to_excel("output.xlsx", index=False)
+
+    ERROR TO FIX:
+    {error}
+
+    BROKEN CODE:
+    {code}
+
+    FIXED CODE (return only raw Python, no markdown, no explanation):"""
+
+    response = llm.invoke(prompt)
+    fixed_code = response.content
+    if fixed_code.startswith("```"):
+        fixed_code = fixed_code.replace("```python", "").replace("```", "").strip()
+    print(f"error: {error}")
+    return fixed_code
 
 
-def check_criteria(data: str):
-    parsed = json.loads(data)
-
-    name = parsed.get("name")
-    age = parsed.get("age")
-    income = int(parsed.get("income"))
-    married = parsed.get("married")
-
-    if income > 20000:
-        return "Passed"
+def save_file(name: str, content: str):
+    modified = f"public/files/{name}"
+    project_dir = r"C:\Users\Rashm\OneDrive\Desktop\NEXT JS\Next"
+    newPath = os.path.join(project_dir, modified)
+    os.makedirs(os.path.dirname(newPath), exist_ok=True)
+    with open(newPath, "w") as f:
+        f.write(content)
