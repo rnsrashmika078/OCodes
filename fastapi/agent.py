@@ -11,8 +11,9 @@ from tools import (
     generate_chart,
     get_current_time,
     generate_files_with_python_code,
+    # generate_pdf_file,
+    generate_html_code
 )
-from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 
 stop = False
 
@@ -20,28 +21,38 @@ messages = []
 
 
 llm = ChatOllama(
-    model="gemma4:e4b",
-    temperature=0,
-    reasoning=False,
+    model="gemma4:e2b",
+    # model="gemma3:latest",
+    # model="deepseek-coder:6.7b",
+    temperature=1.0,
+    top_p=0.95,
+    top_k=64,
 )
 
 
 async def initAgent():
     agent = create_agent(
         llm,
+        temperature=1.0,
+        top_p=0.95,
+        top_k=64,
         tools=[
             get_current_time,
             normal_chat,
             generate_chart,
             generate_files_with_python_code,
+            # generate_pdf_file,
+            generate_html_code
         ],
         middleware=[],
         system_prompt=SystemMessage(
-            content="You are a coding assistant. Use tools when needed. Never output tool calls as text.\n\n"
+            content="You are a ai agent with tools. Use tools when needed. Never output tool calls as text.\n\n"
             "TOOLS:\n"
+            "use chat in sinhala lanagage when user ask\n"
             "- get_current_time → time queries\n"
             "- generate_python_code → generate Python code\n"
             "- generate_chart → charts or visualizations\n"
+            "- generate_html_code →  Generate structured government form HTML "
             "- normal_chat → general conversation\n\n"
             "RULES:\n"
             "- Respond in markdown\n"
@@ -55,33 +66,36 @@ async def initAgent():
 
 
 async def requestLLM(prompt: str):
-    messages.append(HumanMessage(content=prompt))
-    tool = ""
-    full_response = ""
-    agent = await initAgent()
+    try:
+        messages.append(HumanMessage(content=prompt))
+        tool = ""
+        full_response = ""
+        agent = await initAgent()
 
-    async for chunk, metadata in agent.astream(
-        {"messages": messages},
-        stream_mode="messages",
-    ):
-        if chunk.type == "AIMessageChunk":
-            if chunk.tool_calls:
-                tool = chunk.tool_calls
-                yield json.dumps(
-                    {
-                        "message": "",
-                        "type": "tool",
-                        "t_name": tool[0]["name"],
-                        "content": tool,
-                    }
-                ) + "\n"
-            elif chunk.content and chunk.type == "AIMessageChunk":
-                yield json.dumps(
-                    {
-                        "message": chunk.content,
-                        "type": "tool",
-                        "content": tool,
-                        "t_name": None,
-                    }
-                ) + "\n"
-    messages.append(AIMessage(content=full_response))
+        async for chunk, metadata in agent.astream(
+            {"messages": messages},
+            stream_mode="messages",
+        ):
+            if chunk.type == "AIMessageChunk":
+                if chunk.tool_calls:
+                    tool = chunk.tool_calls
+                    yield json.dumps(
+                        {
+                            "message": "",
+                            "type": "tool",
+                            "t_name": tool[0]["name"],
+                            "content": tool,
+                        }
+                    ) + "\n"
+                elif chunk.content and chunk.type == "AIMessageChunk":
+                    yield json.dumps(
+                        {
+                            "message": chunk.content,
+                            "type": "tool",
+                            "content": tool,
+                            "t_name": None,
+                        }
+                    ) + "\n"
+        messages.append(AIMessage(content=full_response))
+    except Exception as e:
+        print(str(e))

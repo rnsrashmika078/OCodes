@@ -11,8 +11,6 @@ from typing import List, Any, Literal, Dict
 def normal_chat(prompt: str) -> str:
     """casual chat for user prompt"""
     return f"{prompt}"
-
-
 @tool
 def get_current_time(
     zone: str,
@@ -20,8 +18,6 @@ def get_current_time(
     """return the current time. argument zone example : Asia/Colombo. based on location.only call this when user specifically asked about current time."""
     now = datetime.now(ZoneInfo("Asia/Colombo"))
     return f"current time {now}"
-
-
 @tool
 def dummy_data() -> str:
     """return the dummy data by calling api.only call this when user specifically ask"""
@@ -31,8 +27,6 @@ def dummy_data() -> str:
     # res = requests.get(url, params=params)
     print("dummy data", res.json())
     return res.json()
-
-
 @tool
 def generate_chart(
     data: List[Dict[str, Any]],
@@ -51,8 +45,6 @@ def generate_chart(
         -yKey: Name for Y axis ( example : value ) -> make sure to add relevant name according to the data ( *** LOWERCASE *** )
     """
     return f"Chart generated with type={type}, xKey={xKey}, yKey={yKey}"
-
-
 @tool
 def create_update_file(directory: str, fileName: str, content: str) -> str:
     """Create or update a file or folder ( directory ) on the computer.
@@ -108,8 +100,6 @@ def create_update_file(directory: str, fileName: str, content: str) -> str:
             "content": "no content",
             "operation": "null",
         }
-
-
 @tool
 def read_file(directory: str, fileName: str) -> str:
     """read a file or folder ( directory ) on the Desktop.
@@ -141,8 +131,6 @@ def read_file(directory: str, fileName: str) -> str:
         return f"data read successfully from the file: data:{data}"
     except Exception as e:
         return f"Failed to create file: {e}"
-
-
 @tool
 def generate_files_with_python_code(python_code: str, file_name: str, save_path: str):
     """generate python code for generate file based on user given input.
@@ -172,7 +160,16 @@ def generate_files_with_python_code(python_code: str, file_name: str, save_path:
             python_code = new_code
     return f"error while create a file .. try again later: {python_code}"
 
-
+@tool
+def generate_html_code(html_code: str,file_name: str):
+    """
+    Generate structured HTML for government PDF forms
+    """
+    return {
+        "type": "html_form",
+        "html_code": html_code,
+        "file_name" : file_name
+    }
 def fix_code(code, error):
     from langchain_ollama import ChatOllama
 
@@ -207,3 +204,21 @@ def save_file(name: str, content: str):
     os.makedirs(os.path.dirname(newPath), exist_ok=True)
     with open(newPath, "w") as f:
         f.write(content)
+
+
+def pdf_generate(html_code:str,file_name:str):
+    try:
+        import pdfkit
+        
+        print("html Code {html_code}" )
+        print("file_name {file_name}" )
+
+        path = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+
+        config = pdfkit.configuration(wkhtmltopdf=path)
+        pdfkit.from_string(html_code, f"{file_name}.pdf", configuration=config)
+    except Exception as e:
+        print(str(e))
+
+
+
