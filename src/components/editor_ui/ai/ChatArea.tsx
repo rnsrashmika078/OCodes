@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -6,26 +7,26 @@ import ReactMarkdown from "react-markdown";
 import { v4 as uuid } from "uuid";
 import AskAI from "./AskAI";
 import { CgSpinner } from "react-icons/cg";
-import Assistant from "@/components/generative_component/Assistant";
-import Time from "@/components/generative_component/Time";
+import GenerativeComponent from "@/components/generative_component/GenerativeComponent";
+import { UserPrompt } from "@/lib/types/type";
 
 const ChatArea = () => {
   const [searchText, setSearchText] = useState("");
-  type UserPrompt = {
-    id: string;
-    role: "assistant" | "user";
-    message: string;
-    type: "tool" | "text";
-    content?: any[];
-    output_message?: string;
-  };
+
   const [messages, setMessage] = useState<UserPrompt[]>([]);
 
   const request = async (prompt: string) => {
     setSearchText("");
     setMessage((prev) => [
       ...prev,
-      { id: uuid(), role: "user", message: prompt, type: "text" },
+      {
+        id: uuid(),
+        role: "user",
+        message: prompt,
+        type: "message",
+        reasoning: "",
+        status: "initializing",
+      },
     ]);
 
     const res = await fetch("http://localhost:8000/request", {
@@ -33,7 +34,7 @@ const ChatArea = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ request: prompt }),
+      body: JSON.stringify({ prompt: prompt }),
     });
 
     const reader = res.body?.getReader();
@@ -42,13 +43,20 @@ const ChatArea = () => {
     const aiUUID = uuid();
     setMessage((prev) => [
       ...prev,
-      { id: aiUUID, role: "assistant", message: "loading", type: "text" },
+      {
+        id: aiUUID,
+        role: "assistant",
+        reasoning: "",
+        message: "loading",
+        status: "initializing",
+        type: "message",
+      },
     ]);
     let result = "";
     let buffer = "";
+    let reasoning = "";
 
     while (true) {
-
       if (!reader) return;
       const { done, value } = await reader.read();
       if (done) break;
@@ -63,22 +71,33 @@ const ChatArea = () => {
 
         const parsed = JSON.parse(part);
 
-        if (parsed.type === "tool") {
+        // if (parsed.type === "tool") {
+        if (parsed.message) {
           result += parsed.message;
-
-          setMessage((prev) =>
-            prev.map((msg) =>
-              msg.id === aiUUID
-                ? { ...msg, message: result, content: parsed.content }
-                : msg,
-            ),
-          );
+        }
+        if (parsed.reasoning) {
+          reasoning += parsed.reasoning;
         }
 
+        setMessage((prev) =>
+          prev.map((msg) =>
+            msg.id === aiUUID
+              ? {
+                  ...msg,
+                  message: result,
+                  reasoning: reasoning,
+                  content: parsed.content,
+                  toolName: parsed.t_name,
+                  type: parsed.type,
+                  status: parsed.status,
+                }
+              : msg,
+          ),
+        );
+        // }
       }
     }
   };
-
   console.log("Messages", messages);
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
@@ -92,12 +111,12 @@ const ChatArea = () => {
           >
             {msg.role === "assistant" && msg.message.startsWith("loading") && (
               <div>
-                <CgSpinner className="animate-spin" />
+                <CgSpinner className="animate-spin text-white" />
               </div>
             )}
             {/* {msg.content && msg.role === "assistant" && <Assistant />} */}
             {msg.content && msg.role === "assistant" && (
-              <Time content={msg.content[0]} />
+              <GenerativeComponent content={msg.content[0]} />
             )}
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}

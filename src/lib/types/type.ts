@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tool, TypedToolCall, TypedToolResult } from "ai";
 
 export interface Conversation {
@@ -23,12 +24,9 @@ export interface UpdateChat {
 export interface Reply {
   text: string;
   toolResults: TypedToolResult<{
-    currentTime: Tool<
-      {},
-      {
-        time: string;
-      }
-    >;
+    currentTime: Tool<{
+      time: string;
+    }>;
     wetherTool: Tool<
       {
         location: string;
@@ -75,3 +73,20 @@ export interface OpenFile {
   path: string;
   type: string;
 }
+export type UserPrompt = {
+  id: string;
+  role: "assistant" | "user";
+  message: string;
+  type: "tool" | "message" | "status";
+  content?: any[];
+  reasoning?: string;
+  output_message?: string;
+  toolName?: string;
+  status:
+    | "initializing"
+    | "calling_tool"
+    | "reasoning"
+    | "responding"
+    | "replying"
+    | "finished";
+};
