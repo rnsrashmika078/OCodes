@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Chart from "./chart";
 
 const GenerativeComponent = ({ content }: { content: any }) => {

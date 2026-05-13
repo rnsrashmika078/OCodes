@@ -17,11 +17,20 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     if (result.canceled || result.filePaths.length === 0) return null;
 
     const folderPath = result.filePaths[0];
+    console.log("folder path", folderPath);
 
-    function readDirRecursive(dir: string): any {
+    readdirSync(folderPath).map((name) => {
+      console.log("name: ", name);
+    });
+
+    function readDirRecursive(dir: string): unknown {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);
+        console.log("filePath", filePath);
+
         const stats = statSync(filePath);
+        console.log("stats", stats);
+
         return stats.isDirectory()
           ? {
               id: uuidv4(),
@@ -88,7 +97,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       content?: string,
       filepath?: string,
       fileName?: string,
-      method?: string
+      method?: string,
     ) => {
       try {
         let filePath: string | undefined;
@@ -142,7 +151,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
           type: null,
         };
       }
-    }
+    },
   );
 
   ipcMain.handle(
@@ -173,7 +182,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
           type: null,
         };
       }
-    }
+    },
   );
 
   ipcMain.handle("create-folder", async (_event, folderPath: string) => {
@@ -240,7 +249,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
             filename,
             fullPath,
           });
-      }
+      },
     );
 
     watcher.on("error", (err) => {

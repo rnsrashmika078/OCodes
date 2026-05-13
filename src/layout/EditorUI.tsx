@@ -12,6 +12,7 @@ import ConsoleViewer from "@/components/editor_ui/editor/ConsoleViewer";
 import ChatArea from "@/components/editor_ui/ai/ChatArea";
 import { useState } from "react";
 import TopBar from "@/components/editor_ui/topbar/topbar";
+import ChatAreaV2 from "@/components/editor_ui/ai/ChatAreaV2";
 const EditorUI = () => {
   //toggling ai chat area
   const [toggleState, setToggleState] = useState<boolean>(false);
@@ -64,6 +65,7 @@ const EditorUI = () => {
                   <div className="relative w-full h-full">
                     <div className="absolute w-full h-full custom-scrollbar">
                       <ChatArea />
+                      {/* <ChatAreaV2 /> */}
                     </div>{" "}
                     <div className="absolute bottom-0 w-full p-5">
                       {/* <AskAI /> */}

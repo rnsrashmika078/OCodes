@@ -52,7 +52,6 @@ export default function TopBar() {
       <Sections name="File">
         <SectionItems>
           {SubItems[0].map((item) => (
-            //@ts-expect-error: key doesn't identify by the ts
             <div key={item.name}>
               <div
                 className="flex items-center gap-2"
@@ -67,7 +66,6 @@ export default function TopBar() {
       <Sections name="Edit">
         <SectionItems>
           {SubItems[1].map((item) => (
-            //@ts-expect-error: key doesn't identify by the ts
             <div key={item.name}>
               <div
                 className="flex items-center gap-2"
@@ -82,7 +80,6 @@ export default function TopBar() {
       <Sections name="Memory">
         <SectionItems>
           {SubItems[2].map((item) => (
-            //@ts-expect-error: key doesn't identify by the ts
             <div key={item.name}>
               <div
                 className="flex items-center gap-2"

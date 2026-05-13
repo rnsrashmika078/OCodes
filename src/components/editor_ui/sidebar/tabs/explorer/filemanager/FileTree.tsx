@@ -98,7 +98,7 @@ export const FileTree = ({
       if (project?.path) {
         setProject(await window.fsmodule.refreshProject(project.path));
       } else {
-        // console.warn("⚠️ No project path set, skipping refresh");
+        // console.warn(" No project path set, skipping refresh");
       }
     });
     return () => {
@@ -212,7 +212,6 @@ export const FileTree = ({
         sortedFiles.length > 0 &&
         sortedFiles.map((node, idx) => (
           <div
-            // @ts-expect-error:expect-error-here
             key={idx}
             className="mx-2"
           >

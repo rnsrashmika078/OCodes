@@ -1,6 +1,6 @@
 import { BiDotsHorizontal } from "react-icons/bi";
-import { FileTree } from "./filemanager/FileTree";
 import { useEditor } from "@/lib/zustand/store";
+import FileTreeV2 from "./filemanager/FileTreeV2";
 
 const Explorer = () => {
   const project = useEditor((store) => store.project);
@@ -18,7 +18,8 @@ const Explorer = () => {
       {/* file manager */}
       <div className="relative h-full custom-scrollbar-y w-full  flex-shrink-0">
         <div className="h-full space-y-2 p-2  flex-shrink-0">
-          <FileTree nodes={project?.tree} project={project} />
+          {/* <FileTreeV2 nodes={project?.tree} project={project} /> */}
+          <FileTreeV2 />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { ollamaQuery } from "./ipcs/llmOperation";
 //@ts-expect-error:
 import { startChatServer } from "./express/server.js";
 import "dotenv/config";
+import { registerFileSystemHandlers } from "./ipcs/index.js";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -73,7 +74,7 @@ app.whenReady().then(() => {
   UserPreference();
   ollamaQuery();
 
-  // registerFileSystemHandlers(win);
+  registerFileSystemHandlers(win);
   // handleFileOperations(win);
 
   autoUpdater.checkForUpdatesAndNotify();

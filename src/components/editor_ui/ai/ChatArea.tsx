@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -8,179 +8,72 @@ import { v4 as uuid } from "uuid";
 import AskAI from "./AskAI";
 import { CgSpinner } from "react-icons/cg";
 import GenerativeComponent from "@/components/generative_component/GenerativeComponent";
-import { UserPrompt } from "@/lib/types/type";
-
-const ChatArea = () => {
+import { ExtendedMessage } from "@/lib/types/type";
+import { useChat, useEditor } from "@/lib/zustand/store";
+import {
+  FetchStreamTransport,
+  useStream,
+} from "@langchain/langgraph-sdk/react";
+import ChatMessages from "./ChatMessage";
+const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
 
-  const [messages, setMessage] = useState<UserPrompt[]>([]);
+  const appendMessages = useChat((store) => store.appendMessages);
+  const updateMessage = useChat((store) => store.updateMessage);
 
-  const request = async (prompt: string) => {
-    setSearchText("");
-    setMessage((prev) => [
-      ...prev,
-      {
-        id: uuid(),
-        role: "user",
-        message: prompt,
-        type: "message",
-        reasoning: "",
-        status: "initializing",
-      },
-    ]);
-
-    const res = await fetch("http://localhost:8000/request", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: prompt }),
+  const transport = useMemo(() => {
+    // const apiKeyValue = apiKey;
+    return new FetchStreamTransport({
+      apiUrl: "http://localhost:3000/api/chat",
     });
+  }, []);
 
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder("utf-8");
+  const { messages, submit, isLoading, stop } = useStream({
+    transport,
+  });
+  const formattedMessage = useMemo(() => {
+    return messages.map(
+      (msg) =>
+        ({
+          ...msg,
+          additional_kwargs: msg.additional_kwargs,
+          // invalid_tool_calls: msg.type === "ai" ? msg.invalid_tool_calls : null,
+          // tool_calls: msg.type === "ai" ? msg.tool_calls : null,
+        }) as ExtendedMessage,
+    );
+  }, [messages]);
 
-    const aiUUID = uuid();
-    setMessage((prev) => [
-      ...prev,
-      {
-        id: aiUUID,
-        role: "assistant",
-        reasoning: "",
-        message: "loading",
-        status: "initializing",
-        type: "message",
-      },
-    ]);
-    let result = "";
-    let buffer = "";
-    let reasoning = "";
-
-    while (true) {
-      if (!reader) return;
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const parts = buffer.split("\n");
-      buffer = parts.pop() || "";
-
-      for (const part of parts) {
-        if (!part.trim()) continue;
-
-        const parsed = JSON.parse(part);
-
-        // if (parsed.type === "tool") {
-        if (parsed.message) {
-          result += parsed.message;
-        }
-        if (parsed.reasoning) {
-          reasoning += parsed.reasoning;
-        }
-
-        setMessage((prev) =>
-          prev.map((msg) =>
-            msg.id === aiUUID
-              ? {
-                  ...msg,
-                  message: result,
-                  reasoning: reasoning,
-                  content: parsed.content,
-                  toolName: parsed.t_name,
-                  type: parsed.type,
-                  status: parsed.status,
-                }
-              : msg,
-          ),
-        );
-        // }
-      }
-    }
-  };
   console.log("Messages", messages);
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
-      <div className="h-full flex flex-col custom-scrollbar  p-5 ">
-        {messages?.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col  w-full p-2 ${
-              msg.role === "user" ? "items-end" : "justify-start"
-            }`}
-          >
-            {msg.role === "assistant" && msg.message.startsWith("loading") && (
-              <div>
-                <CgSpinner className="animate-spin text-white" />
-              </div>
-            )}
-            {/* {msg.content && msg.role === "assistant" && <Assistant />} */}
-            {msg.content && msg.role === "assistant" && (
-              <GenerativeComponent content={msg.content[0]} />
-            )}
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({ children, ...props }) => (
-                  <h1 className="text-white text-2xl font-bold" {...props}>
-                    {children}
-                  </h1>
-                ),
-                h2: ({ children, ...props }) => (
-                  <h2 className=" text-xl font-semibold " {...props}>
-                    {children}
-                  </h2>
-                ),
-                p: ({ children, ...props }) => (
-                  <p className="text-white" {...props}>
-                    {children}
-                  </p>
-                ),
-                ul: ({ children, ...props }) => <ul {...props}>{children}</ul>,
-                ol: ({ children, ...props }) => (
-                  <ol className="text-white " {...props}>
-                    {children}
-                  </ol>
-                ),
-                li: ({ children, ...props }) => (
-                  <li className="text-white " {...props}>
-                    {children}
-                  </li>
-                ),
-                code({ className, children }) {
-                  const match = /language-(\w+)/.exec(className || "");
-
-                  if (match) {
-                    return (
-                      <SyntaxHighlighter
-                        style={vscDarkPlus}
-                        language={match[1]}
-                        PreTag="div"
-                      >
-                        {String(children).replace(/\n$/, "")}
-                      </SyntaxHighlighter>
-                    );
-                  }
-                  return (
-                    <code className="text-white  rounded">{children}</code>
-                  );
-                },
-              }}
-            >
-              {msg.message.startsWith("loading") ? "" : msg.message}
-            </ReactMarkdown>
-          </div>
-        ))}
+      <div className="w-full">
+        {/* {JSON.stringify(toolCalls[0])} */}
+        {formattedMessage && formattedMessage.length > 0 && (
+          <ChatMessages
+            isLoading={isLoading}
+            // addToolApprovalResponse={addToolApprovalResponse}
+            messages={formattedMessage}
+            // regenerate={regenerate}
+            // status={status}
+          />
+        )}
       </div>
       <div className="p-5">
         <AskAI
           searchText={searchText}
-          handleClick={(search) => request(search)}
+          handleClick={(search) => {
+            console.log("search", search);
+            submit({
+              messages: [...messages, { content: search, type: "human" }],
+            });
+          }}
           setSearchText={setSearchText}
         />
       </div>
     </div>
   );
-};
+});
+
+ChatArea.displayName = "ChatArea";
 
 export default ChatArea;

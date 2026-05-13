@@ -25,7 +25,7 @@ const CodeEditor = () => {
     }
   }
   const [editorCode, setEditorCode] = useState<string>(
-    activeFile?.content ?? ""
+    activeFile?.content ?? "",
   );
   const debounceCodeEditorText = useDebounce(editorCode, 300);
 
@@ -34,7 +34,7 @@ const CodeEditor = () => {
       await window.fsmodule.saveFile(
         debounceCodeEditorText.toString() ?? "",
         activeFile?.path,
-        activeFile?.name
+        activeFile?.name,
       );
       setUpdateActiveFile(debounceCodeEditorText.toString() ?? "");
       // if (project) {

@@ -1,22 +1,13 @@
 import { create } from "zustand";
-import {
-  AuthUser,
-  FilePath,
-  OpenFile,
-  UpdateChat,
-  UserMessage,
-} from "@/lib/types/type";
+import { AuthUser, ChatMessages, FilePath, OpenFile } from "@/lib/types/type";
 
-type ChatStore = {
+type FileOperation = {
   height: number;
   loading: boolean;
   trackId: string | null;
-  chats: UpdateChat[] | null;
   authUser: AuthUser | null;
-  userMessages: UserMessage[] | null;
-  notifier: String | null;
+  notifier: string | null;
   copiedText: string | null;
-  activeChat: UpdateChat | null;
 
   // new store items
   project: FilePath | null;
@@ -24,17 +15,10 @@ type ChatStore = {
   activeFile: OpenFile | null;
   clickedFileCurrentPath: string | null;
 
-  setUserMessages: (message: UserMessage | null) => void;
   setLoading: (isLoading: boolean) => void;
   setHeight: (currentHeight: number) => void;
   setNotification: (notifier: string | null) => void;
-  setUpdateMessage: (id: string, message: string) => void;
   setAuthUser: (authData: AuthUser | null) => void;
-  setChats: (chat: UpdateChat) => void;
-  setAllmessage: (messages: UserMessage[]) => void;
-  updateChats: (mutateChats: UpdateChat[]) => void;
-  setActiveChat: (chatData: UpdateChat | null) => void;
-  deleteChat: (id: string) => void;
   setTrackId: (id: string | null) => void;
   setCopiedText: (copiedText: string | null) => void;
 
@@ -56,51 +40,35 @@ type ActiveTabStore = {
   setActiveTab: (tab: string) => void;
 };
 
-export const useEditor = create<ChatStore>((set) => ({
-  userMessages: null,
+export const useEditor = create<FileOperation>((set) => ({
   notifier: null,
   trackId: null,
   authUser: null,
   loading: false,
-  chats: null,
   userPreference: { netstats: false, authstats: false },
-  activeChat: null,
+
   height: window.innerHeight,
   copiedText: null,
   clickedFileCurrentPath: null,
 
-  // new store items
+  //chat related varaibles
+
+  //files related variables
   project: null,
   openFiles: [],
   activeFile: null,
-
-  setUserMessages: (message: UserMessage | null) =>
-    set((state) => ({
-      userMessages: message ? [...(state.userMessages ?? []), message] : [],
-    })),
 
   setHeight: (currentHeight) => set(() => ({ height: currentHeight })),
   setNotification: (notifier) => set(() => ({ notifier })),
   setLoading: (isLoading) => set(() => ({ loading: isLoading })),
   setAuthUser: (authData) => set(() => ({ authUser: authData })),
-  setChats: (chats) =>
-    set((state) => ({ chats: [...(state.chats ?? []), chats] })),
-  setActiveChat: (chatData) => set(() => ({ activeChat: chatData })),
-  setUpdateMessage: (id, message) =>
-    set((state) => ({
-      userMessages: state.userMessages?.map((msg) =>
-        msg.messageId === id ? { ...msg, ai: message } : msg
-      ),
-    })),
-  setAllmessage: (messages) => set(() => ({ userMessages: messages })),
-  updateChats: (mutateChats) => set(() => ({ chats: mutateChats })),
-  deleteChat: (id) =>
-    set((state) => ({
-      chats: state.chats?.filter((ch) => ch.chatId !== id),
-    })),
+
+  //chat reacte functions
+
   setTrackId: (id) => set(() => ({ trackId: id })),
   setCopiedText: (text) => set(() => ({ copiedText: text })),
 
+  //file related functions
   // new store items
   setProject: (filepath) => set(() => ({ project: filepath })),
 
@@ -119,7 +87,7 @@ export const useEditor = create<ChatStore>((set) => ({
                     type: updateFile.type ?? "",
                     children: f.children ?? [], // keep children if they exist
                   }
-                : f
+                : f,
             ),
           }
         : null,
@@ -143,7 +111,7 @@ export const useEditor = create<ChatStore>((set) => ({
   setUpdateOpenFiles: (file) =>
     set((state) => ({
       openFiles: state.openFiles.map((f) =>
-        f?.id === file.id ? { ...f, ...file } : f
+        f?.id === file.id ? { ...f, ...file } : f,
       ),
     })),
   setUpdateActiveFile: (content) =>
@@ -159,4 +127,40 @@ export const useEditor = create<ChatStore>((set) => ({
 export const useActiveTab = create<ActiveTabStore>((set) => ({
   tab: "Home",
   setActiveTab: (tab) => set({ tab }),
+}));
+
+type ChatStore = {
+  //variables
+  messages: ChatMessages[] | null;
+
+  //functions
+  appendMessages: (newMessage: ChatMessages) => void;
+  updateMessage: (updateMessage: ChatMessages, id: string) => void;
+  deleteMessage: (id: string) => void;
+};
+
+export const useChat = create<ChatStore>((set) => ({
+  //variables
+  messages: null,
+
+  //functions
+
+  //append Messages
+  appendMessages: (newMessage: ChatMessages) =>
+    set((state) => ({
+      messages: [...(state.messages ?? []), newMessage],
+    })),
+  //update Messages
+
+  updateMessage: (updateMessage: ChatMessages, id: string) =>
+    set((state) => ({
+      messages: state.messages?.map((msg) =>
+        msg.id === id ? { ...msg, ...updateMessage } : msg,
+      ),
+    })),
+  //delete messages
+  deleteMessage: (id: string) =>
+    set((state) => ({
+      messages: state.messages?.filter((msg) => msg.id !== id),
+    })),
 }));

@@ -20,7 +20,7 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF"];
 const Chart = memo(({ data }: ChartProps) => {
   console.log("content", data);
 
-  if (data.type === "pie") {
+  if (data?.type === "pie") {
     return (
       <ResponsiveContainer width="100%" height={300} className="mb-5">
         <PieChart>
@@ -40,7 +40,7 @@ const Chart = memo(({ data }: ChartProps) => {
       </ResponsiveContainer>
     );
   }
-  if (data.type === "line") {
+  if (data?.type === "line") {
     return (
       <ResponsiveContainer width="100%" height={300} className="mb-5">
         <LineChart data={data.data} className="">

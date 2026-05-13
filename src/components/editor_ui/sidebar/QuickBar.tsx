@@ -48,7 +48,6 @@ const QuickBar = () => {
       <div className="flex flex-col items-center">
         {Tabs.slice(0, Tabs.length - 2).map((t, i) => (
           <div
-            // @ts-expect-error: key idenfifer issue
             key={i}
             className="relative transition-all z-[9999] text-gray-400 hover:text-white py-3"
             // onClick={() => alert(t.name)}
@@ -70,7 +69,6 @@ const QuickBar = () => {
       <div className="flex flex-col items-center">
         {Tabs.slice(-2).map((t, i) => (
           <div
-            // @ts-expect-error: key idenfifer issue
             key={i}
             className="relative transition-all text-gray-400 hover:text-white py-3"
             onMouseEnter={() => setHoverTab({ name: t.name, isHover: true })}
