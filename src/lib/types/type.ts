@@ -126,4 +126,8 @@ type TMessage = {
   status: string;
 };
 
+export type TFileType = {
+  type: "unknown" | "file" | "folder";
+};
+
 export interface ExtendedMessage extends LCMessage, TMessage {}
