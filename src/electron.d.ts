@@ -5,13 +5,13 @@ export {};
 declare global {
   interface Window {
     electronAPI: {
-      getMetadata: (filePath: string) => Promise<any>;
-      initializeLLM: () => Promise<String>;
+      getMetadata: (filePath: string) => Promise<unknown>;
+      initializeLLM: () => Promise<string>;
       onFsChange: (
         callback: (
           event: string,
-          data: { event: string; filename: string; fullPath: string }
-        ) => void
+          data: { event: string; filename: string; fullPath: string },
+        ) => void,
       ) => () => void;
     };
     chatgpt: {
@@ -23,11 +23,11 @@ declare global {
     };
     updater: {
       onChecking(arg0: () => void): unknown;
-      onError(arg0: (err: any) => void): unknown;
+      onError(arg0: (err: unknown) => void): unknown;
       checkForUpdate: () => void; // triggers update check
       installUpdate: () => void; // triggers update installation
       onUpdateAvailable: (
-        callback: (info: { version: string; releaseNotes?: string }) => void
+        callback: (info: { version: string; releaseNotes?: string }) => void,
       ) => void;
       onUpdateDownloaded: (callback: () => void) => void; // called when update downloaded
     };
@@ -41,7 +41,7 @@ declare global {
     fsmodule: {
       create: (
         filepath?: string,
-        code?: string
+        code?: string,
       ) => Promise<{
         success: boolean;
         id: string;
@@ -54,7 +54,7 @@ declare global {
         content?: string,
         filepath?: string,
         fileName?: string,
-        method?: string
+        method?: string,
       ) => Promise<{
         id: string;
         success: boolean;
@@ -65,7 +65,7 @@ declare global {
       saveFile: (
         content?: string,
         filepath?: string,
-        fileName?: string
+        fileName?: string,
       ) => Promise<{
         id: string;
         success: boolean;

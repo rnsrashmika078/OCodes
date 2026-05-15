@@ -19,9 +19,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     const folderPath = result.filePaths[0];
     console.log("folder path", folderPath);
 
-    readdirSync(folderPath).map((name) => {
-      console.log("name: ", name);
-    });
+ 
 
     function readDirRecursive(dir: string): unknown {
       return readdirSync(dir).map((name) => {
@@ -62,30 +60,25 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
 
   ipcMain.handle("create", async (_event, filepath: string, code?: string) => {
     try {
-      // Resolve full path
       const filePath = join(filepath);
 
-      console.log("Filepath", filepath);
-      // Ensure directory exists
       const dir = dirname(filePath);
       mkdirSync(dir, { recursive: true });
 
-      // Write AI code to file
       writeFileSync(filePath, code ?? "", "utf8");
 
-      // Build return object with all required properties
       const result = {
-        id: uuidv4(), // unique id for tracking
+        id: uuidv4(),
         content: code ?? "",
         name: basename(filePath),
         path: filePath,
-        type: extname(filePath).replace(".", ""), // e.g. "tsx"
+        type: extname(filePath).replace(".", ""), 
       };
       console.log("result", result);
 
       return { success: true, ...result };
     } catch (error) {
-      console.error("❌ Error creating component:", error);
+      console.error("Error creating component:", error);
       return { success: false, error: String(error) };
     }
   });
@@ -215,7 +208,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     if (!folderPath) {
       throw new Error("No folder path provided to read-project");
     }
-    function readDirRecursive(dir: string): any {
+    function readDirRecursive(dir: string): unknown {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);
         const stats = statSync(filePath);
@@ -235,6 +228,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
   });
   // Watch project folder for changes
   function watchProjectDirectory(folderPath: string) {
+    console.log("watcher run");
     const watcher = watch(
       folderPath,
       { recursive: true },
@@ -243,17 +237,18 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
 
         const fullPath = path.join(folderPath, filename);
         // send update to renderer
-        mainWindow &&
+        if (mainWindow) {
           mainWindow.webContents.send("fs-change", {
             event,
             filename,
             fullPath,
           });
+        }
       },
     );
 
     watcher.on("error", (err) => {
-      console.error("❌ FS watcher error:", err);
+      console.error("FS watcher error:", err);
     });
 
     return watcher;

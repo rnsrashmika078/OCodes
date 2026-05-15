@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthUser } from "@/lib/types/type";
 import { ipcRenderer, contextBridge } from "electron";
 
@@ -6,7 +7,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   on(...args: Parameters<typeof ipcRenderer.on>) {
     const [channel, listener] = args;
     return ipcRenderer.on(channel, (event, ...args) =>
-      listener(event, ...args)
+      listener(event, ...args),
     );
   },
   off(...args: Parameters<typeof ipcRenderer.off>) {
@@ -50,7 +51,7 @@ contextBridge.exposeInMainWorld("fsmodule", {
     content?: string,
     filepath?: string,
     fileName?: string,
-    method?: string
+    method?: string,
   ) => ipcRenderer.invoke("create-file", content, filepath, fileName, method),
   saveFile: (content?: string, filepath?: string, fileName?: string) =>
     ipcRenderer.invoke("save-file", content, filepath, fileName),

@@ -60,6 +60,7 @@ export interface Tree {
   type: string;
   name: string;
   path: string;
+  isExpanded: boolean;
   children?: Tree[];
 }
 export interface FilePath {

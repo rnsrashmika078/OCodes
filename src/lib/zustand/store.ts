@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { AuthUser, ChatMessages, FilePath, OpenFile } from "@/lib/types/type";
+import { AuthUser, ChatMessages, FilePath, OpenFile, Tree } from "@/lib/types/type";
 
 type FileOperation = {
   height: number;
@@ -24,6 +24,7 @@ type FileOperation = {
 
   // new store items
   setProject: (project: FilePath | null) => void;
+  setExpandedStatus: (id: string) => void;
 
   setUpdateProjectFile: (updateFile: OpenFile) => void;
   setOpenFiles: (file: OpenFile) => void;
@@ -71,12 +72,42 @@ export const useEditor = create<FileOperation>((set) => ({
   //file related functions
   // new store items
   setProject: (filepath) => set(() => ({ project: filepath })),
+  setExpandedStatus: (id) =>
+    set((state) => {
+      if (!state.project) return { project: null };
 
+      const toggleNode = (nodes: Tree[]): Tree[] => {
+        return nodes.map((node) => {
+          if (node.id === id) {
+            return {
+              ...node,
+              isExpanded: !node.isExpanded,
+            };
+          }
+
+          if (node.children) {
+            return {
+              ...node,
+              children: toggleNode(node.children),
+            };
+          }
+
+          return node;
+        });
+      };
+
+      return {
+        project: {
+          ...state.project,
+          tree: toggleNode(state.project.tree),
+        },
+      };
+    }),
   setUpdateProjectFile: (updateFile) =>
     set((state) => ({
       project: state.project
         ? {
-            ...state.project, // keep `path`
+            ...state.project,
             tree: state.project.tree.map((f) =>
               f.id === updateFile.id
                 ? {
