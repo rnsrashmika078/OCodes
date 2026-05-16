@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { RiCloseFill } from "react-icons/ri";
 import { useEditor } from "@/lib/zustand/store";
 import CodeEditor from "@/components/editor_ui/editor/CodeEditor";
@@ -10,7 +10,7 @@ interface TabLayout {
   className?: string;
 }
 
-const TabLayout = ({ className }: TabLayout) => {
+const TabLayout = memo(({ className }: TabLayout) => {
   const [activeMouse, setActiveMouse] = useState<boolean>(false);
   const [turn, setTurn] = useState<string>("preview");
   const setCloseFile = useEditor((store) => store.setCloseFile);
@@ -19,22 +19,21 @@ const TabLayout = ({ className }: TabLayout) => {
   const activeFile = useEditor((store) => store.activeFile);
 
   useEffect(() => {
-    if (openFiles) {
-      const lastFile = openFiles[openFiles.length - 1];
-      if (lastFile) {
-        const file = {
-          id: lastFile?.id,
-          name: lastFile?.name ?? "Untitled " + lastFile.id.slice(0, 2),
-          type: lastFile?.type ?? "",
-          path: lastFile?.path ?? "",
-          content: lastFile?.content,
-        };
-        setActiveFile(file);
-        return;
-      }
+    if (!openFiles) return;
+    const lastFile = openFiles[openFiles.length - 1];
+    if (lastFile) {
+      const file = {
+        id: lastFile?.id,
+        name: lastFile?.name ?? "Untitled " + lastFile.id.slice(0, 2),
+        type: lastFile?.type ?? "",
+        path: lastFile?.path ?? "",
+        content: lastFile?.content,
+      };
+      setActiveFile(file);
+      return;
     }
-    return;
   }, [openFiles]);
+
   useEffect(() => {
     if (openFiles.length === 0) {
       setActiveFile(null);
@@ -46,14 +45,14 @@ const TabLayout = ({ className }: TabLayout) => {
     setCloseFile(fileId);
   };
 
-  const [activeFileContent, setActiveFileContent] = useState<string>(
-    activeFile?.content ?? ""
-  );
-  useEffect(() => {
-    if (activeFileContent !== activeFile?.content) {
-      setActiveFileContent(activeFile?.content!);
-    }
-  }, [activeFileContent, activeFile]);
+  // const [activeFileContent, setActiveFileContent] = useState<string>(
+  //   activeFile?.content ?? "",
+  // );
+  // useEffect(() => {
+  //   if (activeFileContent !== activeFile?.content) {
+  //     setActiveFileContent(activeFile?.content!);
+  //   }
+  // }, [activeFileContent, activeFile]);
 
   return (
     <div className={` flex flex-col w-full h-full select-none ${className}`}>
@@ -65,15 +64,16 @@ const TabLayout = ({ className }: TabLayout) => {
         >
           {openFiles?.map((tab, index: number) => (
             <div
-              // @ts-expect-error: tab index issue
               key={index}
-              onClick={() => {
+              onClick={async () => {
+                const result = await window.fsmodule.openFile(tab.path);
+
                 setActiveFile({
                   id: tab.id ?? "",
                   name: tab?.name ?? "Untitled " + tab.id.slice(0, 2),
                   type: tab?.type ?? "",
                   path: tab?.path ?? "",
-                  content: tab.content,
+                  content: result,
                 });
               }}
               className={`border relative border-[#434343]  flex justify-center transition-all duration-300 hover:cursor-pointer select-none  items-center w-1/2 sm:w-1/2 md:w-1/3 lg:w-1/5 xl:w-1/5 hover:bg-[#232222]  ${
@@ -125,6 +125,7 @@ const TabLayout = ({ className }: TabLayout) => {
       </div>
     </div>
   );
-};
+});
+TabLayout.displayName = "TabLayout";
 
 export default TabLayout;

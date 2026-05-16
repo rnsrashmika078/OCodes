@@ -17,7 +17,6 @@ export default function ConsoleViewer() {
     window.terminal.create();
 
     term.onData((data) => {
-      console.log("data", data);
       term.write(data);
       window.terminal.write(data);
     });

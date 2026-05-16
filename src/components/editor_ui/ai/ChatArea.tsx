@@ -43,7 +43,6 @@ const ChatArea = memo(() => {
     );
   }, [messages]);
 
-  console.log("Messages", messages);
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
       <div className="w-full">
@@ -62,7 +61,6 @@ const ChatArea = memo(() => {
         <AskAI
           searchText={searchText}
           handleClick={(search) => {
-            console.log("search", search);
             submit({
               messages: [...messages, { content: search, type: "human" }],
             });

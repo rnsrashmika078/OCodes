@@ -1,6 +1,6 @@
 import ToolTip from "@/components/custom/ToolTip";
-import React, { useState } from "react";
-import { BsFileSlides, BsGear, BsGithub, BsSearch } from "react-icons/bs";
+import { memo, useState } from "react";
+import { BsGear, BsGithub, BsSearch } from "react-icons/bs";
 import { CgProfile } from "react-icons/cg";
 import { GrDocument } from "react-icons/gr";
 
@@ -14,7 +14,7 @@ type HoverProps = {
   name: string;
   isHover: boolean;
 };
-const QuickBar = () => {
+const QuickBar = memo(() => {
   const Tabs: TabsProps[] = [
     {
       name: "Explorer",
@@ -86,6 +86,7 @@ const QuickBar = () => {
       </div>
     </div>
   );
-};
+});
+QuickBar.displayName = "QuickBar";
 
 export default QuickBar;

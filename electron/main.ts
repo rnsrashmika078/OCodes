@@ -6,8 +6,6 @@ import path from "node:path";
 import dotenv from "dotenv";
 import { UserPreference } from "./storage";
 import { ollamaQuery } from "./ipcs/llmOperation";
-//@ts-expect-error:
-import { startChatServer } from "./express/server.js";
 import "dotenv/config";
 import { registerFileSystemHandlers } from "./ipcs/index.js";
 

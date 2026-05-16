@@ -4,6 +4,7 @@ import {
   ChatMessages,
   FilePath,
   OpenFile,
+  TProjectRead,
   Tree,
 } from "@/lib/types/type";
 
@@ -20,6 +21,8 @@ type FileOperation = {
   openFiles: OpenFile[];
   activeFile: OpenFile | null;
   clickedFileCurrentPath: string | null;
+
+  projectFileReadings: TProjectRead[];
 
   setLoading: (isLoading: boolean) => void;
   setHeight: (currentHeight: number) => void;
@@ -41,6 +44,8 @@ type FileOperation = {
   setUpdateActiveFile: (content: string) => void;
   setUpdateOpenFiles: (file: OpenFile) => void;
   setClickedFileCurrentPath: (path: string | null) => void;
+
+  setProjectFileReadings: (readings: TProjectRead[]) => void; // this is where the all file content read content store within it name path id  and store
 };
 
 type ActiveTabStore = {
@@ -58,6 +63,7 @@ export const useEditor = create<FileOperation>((set) => ({
   height: window.innerHeight,
   copiedText: null,
   clickedFileCurrentPath: null,
+  projectFileReadings: [],
 
   //chat related varaibles
 
@@ -78,6 +84,9 @@ export const useEditor = create<FileOperation>((set) => ({
 
   //file related functions
   // new store items
+
+  setProjectFileReadings: (readings) =>
+    set(() => ({ projectFileReadings: readings })),
   setProject: (filepath) => set(() => ({ project: filepath })),
   setExpandedStatus: (id) =>
     set((state) => {

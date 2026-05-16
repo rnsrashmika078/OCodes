@@ -12,9 +12,9 @@ const CodeEditor = () => {
   function getLanguageFromFileName(fileName: string) {
     const ext = fileName.split(".").pop()?.toLowerCase();
     switch (ext) {
-      case "ts":
-        return "typescript";
       case "tsx":
+        return "typescript";
+      case "jsx":
         return "javascript";
       case "js":
         return "javascript";
@@ -27,11 +27,12 @@ const CodeEditor = () => {
   const [editorCode, setEditorCode] = useState<string>(
     activeFile?.content ?? "",
   );
+
   const debounceCodeEditorText = useDebounce(editorCode, 300);
 
   useEffect(() => {
     const saveChanges = async () => {
-      await window.fsmodule.saveFile(
+      const result = await window.fsmodule.saveFile(
         debounceCodeEditorText.toString() ?? "",
         activeFile?.path,
         activeFile?.name,
@@ -45,9 +46,45 @@ const CodeEditor = () => {
     saveChanges();
   }, [debounceCodeEditorText]);
 
+  loader.init().then((monaco) => {
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      `
+    declare module "react" {
+      export function useState<T>(initial: T): [T, (v: T) => void];
+      export function useEffect(cb: () => void, deps?: any[]): void;
+    }
+
+    declare namespace JSX {
+      interface IntrinsicElements {
+        div: any;
+        h1: any;
+      }
+    }
+    `,
+      "file:///node_modules/@types/react/index.d.ts",
+    );
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.CommonJS,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      esModuleInterop: true,
+      allowJs: true,
+      typeRoots: ["node_modules/@types"],
+    });
+
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+  });
+
+  const openFiles = useEditor((store) => store.openFiles);
+
   return (
     <div className="flex flex-[1] h-full w-[calc(100%-0.5rem)]">
-      {activeFile && activeFile.content ? (
+      {activeFile && openFiles?.length > 0 ? (
         <Editor
           onChange={(value) => {
             setEditorCode(value ?? "");
@@ -55,7 +92,7 @@ const CodeEditor = () => {
           height="100%"
           width="100%"
           defaultLanguage={getLanguageFromFileName(activeFile?.name ?? "")}
-          value={editorCode}
+          value={activeFile.content}
           theme="vs-dark"
           options={{
             minimap: { enabled: false },
@@ -63,6 +100,8 @@ const CodeEditor = () => {
             wordWrap: "on",
             fontSize: 14,
             automaticLayout: true,
+            suggestOnTriggerCharacters: true,
+            quickSuggestions: true,
           }}
         />
       ) : (

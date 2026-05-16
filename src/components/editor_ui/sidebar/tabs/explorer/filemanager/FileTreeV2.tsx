@@ -6,11 +6,16 @@ import { VscNewFolder } from "react-icons/vsc";
 import { BiRefresh } from "react-icons/bi";
 import { useEffect, useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
-import { recursiveTreeSorting, RecursiveTreeTraversal } from "@/helper";
+import {
+  readProjectFileContent,
+  recursiveTreeSorting,
+  RecursiveTreeTraversal,
+} from "@/helper";
 
 const FileTreeV2 = () => {
   const setProject = useEditor((s) => s.setProject);
   const setCurrentPath = useEditor((s) => s.setClickedFileCurrentPath);
+  const setProjectFileReadings = useEditor((s) => s.setProjectFileReadings);
 
   const project = useEditor((s) => s.project);
   const currentPath = useEditor((s) => s.clickedFileCurrentPath);
@@ -21,8 +26,10 @@ const FileTreeV2 = () => {
   useEffect(() => {
     const unsubscribe = window.electronAPI.onFsChange(async (_event, _data) => {
       if (project?.path) {
+        console.log("project changes happen");
         setCurrentPath(project.path);
         setProject(await window.fsmodule.refreshProject(project.path));
+        setProjectFileReadings(await readProjectFileContent(project.tree));
       }
     });
     return () => {
@@ -133,7 +140,14 @@ const FileTreeV2 = () => {
                 }
               }}
             />
-            <BiRefresh className="icon" />
+            <BiRefresh
+              className="icon"
+              onClick={async () => {
+                console.log("refreshing");
+                const arr = await readProjectFileContent(project.tree);
+                console.log("arr", arr);
+              }}
+            />
           </div>
         </div>
       )}

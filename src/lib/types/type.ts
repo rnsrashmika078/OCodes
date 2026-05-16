@@ -131,4 +131,10 @@ export type TFileType = {
   type: "unknown" | "file" | "folder";
 };
 
+export type TProjectRead = {
+  name: string;
+  content: string;
+  id: string;
+  path: string;
+};
 export interface ExtendedMessage extends LCMessage, TMessage {}

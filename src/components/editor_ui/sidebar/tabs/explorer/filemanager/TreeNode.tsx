@@ -94,7 +94,6 @@ const TreeNode = memo(
               }}
             />
           )}
-          <FileType type={node.type} />
 
           {!node.name ? (
             <div ref={focusRef}>
@@ -115,19 +114,23 @@ const TreeNode = memo(
             </div>
           ) : (
             <div
+              className="flex gap-2 items-center"
               onClick={async () => {
                 const content = await window.fsmodule.openFile(node.path);
-                console.log(content);
-                setOpenFiles({
-                  name: node.name,
-                  content: content,
-                  id: node.id,
-                  path: node.path,
-                  type: node.type,
-                });
+                console.log("content", content);
+                if (node.type !== "folder") {
+                  setOpenFiles({
+                    name: node.name,
+                    content: content,
+                    id: node.id,
+                    path: node.path,
+                    type: node.type,
+                  });
+                }
               }}
             >
-              {node.name}
+              <FileType type={node.type} />
+              <div>{node.name}</div>
             </div>
           )}
         </div>
