@@ -2,25 +2,30 @@ import { Tree } from "@/lib/types/type";
 import { FaFolder } from "react-icons/fa6";
 import { FaFile } from "react-icons/fa";
 import { IoIosArrowDropupCircle } from "react-icons/io";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEditor } from "@/lib/zustand/store";
-import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useDebounce, useFocusNode } from "@/lib/hooks/useDebounce";
 
 const TreeNode = memo(
   ({
     node,
     level = 0,
     isExpanded,
-    setDebounceText,
+    emptyFileId,
+    // setDebounceText,
   }: {
     node: Tree;
     level: number;
     isExpanded: boolean;
-    setDebounceText: React.Dispatch<React.SetStateAction<string>>;
+    emptyFileId: string;
+    // setDebounceText: React.Dispatch<React.SetStateAction<string>>;
   }) => {
     const setActivePath = useEditor((s) => s.setClickedFileCurrentPath);
     const currentPath = useEditor((s) => s.clickedFileCurrentPath);
+    const project = useEditor((s) => s.project);
+    const setFilterFile = useEditor((s) => s.setFilterFile);
+    const setOpenFiles = useEditor((s) => s.setOpenFiles);
     const setExpandedStatus = useEditor((s) => s.setExpandedStatus);
     const isLastChild = useMemo(() => {
       return node.children?.length === undefined && level > 0;
@@ -29,28 +34,59 @@ const TreeNode = memo(
     const [input, setInput] = useState("");
     const debounceText = useDebounce(input, 250);
 
-    // const createFile = async () => {
-    //   const result = await window.fsmodule.createFile(
-    //     "",
-    //     currentPath ?? "",
-    //     "newfile",
-    //     "silent",
-    //   );
-    // };
+    const focusRef = useRef<HTMLDivElement | null>(null);
+    const executeCreateFile = async () => {
+      if (!input) return;
+      const result = await window.fsmodule.createFile(
+        "",
+        currentPath ?? project?.path,
+        debounceText,
+        "silent",
+      );
+    };
+    const executeCreateFolder = async () => {
+      if (!input) return;
+      const result = await window.fsmodule.createFolder(
+        currentPath + `\\${input}`,
+      );
+    };
 
-    useEffect(() => {
-      setDebounceText(debounceText);
-    }, [debounceText]);
+    const focus = useFocusNode(
+      focusRef,
+      () => {
+        // executeCreateFile();
+      },
+      () => {
+        if (!input) {
+          if (node.type === "file") {
+            setFilterFile(emptyFileId);
+          } else if (node.type === "folder") {
+            setFilterFile(emptyFileId);
+          }
+        } else {
+          if (node.type === "file") {
+            executeCreateFile();
+          } else if (node.type === "folder") {
+            executeCreateFolder();
+          }
+        }
+      },
+    );
+
+    // useEffect(() => {
+    //   setDebounceText(debounceText);
+    // }, [debounceText]);
+
     return (
-      <>
+      <div className="w-full flex flex-col">
         <div
           onClick={() => setActivePath(node.path)}
-          className={`flex flex-shrink items-center gap-2 text-white `}
+          className={`flex  w-full flex-shrink items-center gap-2 text-white  `}
           style={{
             paddingLeft: `${isLastChild ? level + 5 * 12 : level * 12}px`,
           }}
         >
-          {node.children?.length !== undefined && (
+          {node.children?.length !== undefined && node.type !== "file" && (
             <IoIosArrowDropupCircle
               className={`transition-all ${isExpanded ? "rotate-180" : "rotate-90"}`}
               onClick={() => {
@@ -60,17 +96,40 @@ const TreeNode = memo(
           )}
           <FileType type={node.type} />
 
-          <p>
-            {!node.name ? (
+          {!node.name ? (
+            <div ref={focusRef}>
               <input
-                className="bg-transparent"
-                value={input}
+                autoFocus
+                className="bg-transparent border outline-none pl-2 ring-0 focus:outline-none focus:ring-0"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (node.type === "file") {
+                      executeCreateFile();
+                    } else if (node.type === "folder") {
+                      executeCreateFolder();
+                    }
+                  }
+                }}
                 onChange={(e) => setInput(e.target.value)}
               />
-            ) : (
-              node.name
-            )}
-          </p>
+            </div>
+          ) : (
+            <div
+              onClick={async () => {
+                const content = await window.fsmodule.openFile(node.path);
+                console.log(content);
+                setOpenFiles({
+                  name: node.name,
+                  content: content,
+                  id: node.id,
+                  path: node.path,
+                  type: node.type,
+                });
+              }}
+            >
+              {node.name}
+            </div>
+          )}
         </div>
         <AnimatePresence>
           {isExpanded &&
@@ -83,14 +142,14 @@ const TreeNode = memo(
               >
                 <TreeNode
                   node={child}
+                  emptyFileId={emptyFileId}
                   level={level + 1}
                   isExpanded={child.isExpanded}
-                  setDebounceText={setDebounceText}
                 />
               </motion.div>
             ))}
         </AnimatePresence>
-      </>
+      </div>
     );
   },
 );

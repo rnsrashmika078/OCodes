@@ -4,7 +4,7 @@ import React, { HTMLAttributes } from "react";
 
 export function TopBarLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="z-[10000] text-white flex items-center w-full h-10 bg-black/60 px-4 shadow-md">
+    <div className="text-white flex items-center w-full h-10 bg-black/60 px-4 shadow-md">
       {children}
     </div>
   );
@@ -18,7 +18,7 @@ export function Sections({
   name: string;
 }) {
   return (
-    <div className="relative mx-2 group">
+    <div className="relative mx-2 group ">
       <button className="flex items-center px-3 py-1 hover:bg-white/20 rounded transition">
         {name}
       </button>

@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { AuthUser, ChatMessages, FilePath, OpenFile, Tree } from "@/lib/types/type";
+import {
+  AuthUser,
+  ChatMessages,
+  FilePath,
+  OpenFile,
+  Tree,
+} from "@/lib/types/type";
 
 type FileOperation = {
   height: number;
@@ -25,6 +31,7 @@ type FileOperation = {
   // new store items
   setProject: (project: FilePath | null) => void;
   setExpandedStatus: (id: string) => void;
+  setFilterFile: (id: string) => void;
 
   setUpdateProjectFile: (updateFile: OpenFile) => void;
   setOpenFiles: (file: OpenFile) => void;
@@ -123,6 +130,25 @@ export const useEditor = create<FileOperation>((set) => ({
           }
         : null,
     })),
+  setFilterFile: (id) =>
+    set((state) => {
+      if (!state.project) return { project: null };
+
+      const removeNode = (nodes: Tree[]): Tree[] => {
+        return nodes
+          .filter((node) => node.id !== id)
+          .map((node) => ({
+            ...node,
+            children: node.children ? removeNode(node.children) : undefined,
+          }));
+      };
+      return {
+        project: {
+          ...state.project,
+          tree: removeNode(state.project?.tree ?? []),
+        },
+      };
+    }),
   setOpenFiles: (files) =>
     set((state) => ({
       openFiles: [...(state.openFiles ?? []), files],
@@ -189,6 +215,7 @@ export const useChat = create<ChatStore>((set) => ({
         msg.id === id ? { ...msg, ...updateMessage } : msg,
       ),
     })),
+
   //delete messages
   deleteMessage: (id: string) =>
     set((state) => ({

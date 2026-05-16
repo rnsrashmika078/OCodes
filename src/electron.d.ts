@@ -24,17 +24,17 @@ declare global {
     updater: {
       onChecking(arg0: () => void): unknown;
       onError(arg0: (err: unknown) => void): unknown;
-      checkForUpdate: () => void; // triggers update check
-      installUpdate: () => void; // triggers update installation
+      checkForUpdate: () => void; 
+      installUpdate: () => void; 
       onUpdateAvailable: (
         callback: (info: { version: string; releaseNotes?: string }) => void,
       ) => void;
-      onUpdateDownloaded: (callback: () => void) => void; // called when update downloaded
+      onUpdateDownloaded: (callback: () => void) => void; 
     };
     terminal: {
       create: () => Promise<boolean>;
       write: (data: string) => void;
-      onOutput: (callback: (data: string) => void) => void; // FIXED    //re factered - 4.36
+      onOutput: (callback: (data: string) => void) => void; 
       resize?: (cols: number, rows: number) => void;
     };
 
