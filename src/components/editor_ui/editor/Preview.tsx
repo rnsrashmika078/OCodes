@@ -8,22 +8,27 @@ import { memo, useEffect } from "react";
 type PreviewProps = {
   code: string;
 };
+
+// "C:\\Users\\Rashm\\OneDrive\\Desktop\\workspace\\components\\welcome.tsx"
+
 const Preview = memo(({ code }: PreviewProps) => {
   const projectFileReadings = useEditor((store) => store.projectFileReadings);
-  const basePath = useEditor((store) => store.project?.path);
-
-  const contentStructure = projectFileReadings.map((pr) => {
-    const path = pr.path.split("\\")[1];
-
-    return path;
-  });
-  console.log("contentStructure", basePath);
-  console.log(
-    "contentStructure",
-    basePath?.split("C:\\Users\\Rashm\\OneDrive\\Desktop\\")[1],
+  const basePath = useEditor((store) =>
+    store.project?.path.replace(/\\/g, "/"),
   );
-  console.log("contentStructure", contentStructure);
-  // path : content
+
+  const contentStructure = projectFileReadings.reduce(
+    (acc, pr) => {
+      const path = pr.path.replace(/\\/g, "/").split(`${basePath}`)[1];
+
+      if (path) {
+        acc[path] = pr.content;
+      }
+
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return (
     <div className=" h-full overflow-y-auto">
@@ -37,45 +42,8 @@ const Preview = memo(({ code }: PreviewProps) => {
         options={{
           externalResources: ["https://cdn.tailwindcss.com"],
         }}
-        //         files={{
-        //           "/App.js":
-        //             code ||
-        //             `
-        // export default function App() {
-        //   return (
-        //     <h1 className="bg-red-500 text-white p-4">
-        //       Welcome to OCode
-        //     </h1>
-        //   );
-        // }
-        //     `,
-        //         }}
         files={{
-          // "/index.js": `
-          // import App from "./App";
-          // import "./styles.css";
-          // `,
-          "/App.tsx": `
-import Welcome from "./components/welcome";
-
-export default function App() {
-  return <Welcome />;
-}
-`,
-          "/components/welcome.tsx": `
-import Test from "./test";
-
-export default function Welcome() {
-  return <div>
-    <h1 className="bg-red-500 text-black p-4">Hello</h1>;
-    <Test/>
-  </div> 
-}
-`,
-          "/components/test.tsx": `
-export default function Test() {
-  return <h1 className="bg-red-500 text-black p-4">TEST ME DADDY</h1>;
-}`,
+          ...contentStructure,
         }}
       >
         <SandpackLayout style={{ height: "100%" }}>
