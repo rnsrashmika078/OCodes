@@ -21,7 +21,6 @@ const ChatMessages = memo(
     messages: ExtendedMessage[];
     isLoading: boolean;
   }) => {
-
     return (
       <>
         {messages.map((msg, messageIndex) => {
@@ -62,7 +61,9 @@ const ChatMessages = memo(
                     header="Thought Process"
                   >
                     {isAiMsg && reasoningContent && (
-                      <p>{extractTextContent(reasoningContent)}</p>
+                      <ReactMarkdown>
+                        {extractTextContent(reasoningContent)}
+                      </ReactMarkdown>
                     )}
                   </Accordian>
 

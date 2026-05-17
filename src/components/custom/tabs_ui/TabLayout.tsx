@@ -11,7 +11,6 @@ interface TabLayout {
 }
 
 const TabLayout = memo(({ className }: TabLayout) => {
-  const [activeMouse, setActiveMouse] = useState<boolean>(false);
   const [turn, setTurn] = useState<string>("preview");
   const setCloseFile = useEditor((store) => store.setCloseFile);
   const setActiveFile = useEditor((store) => store.setActiveFile);
@@ -59,8 +58,6 @@ const TabLayout = memo(({ className }: TabLayout) => {
       <div className="relative flex flex-col h-full w-full">
         <div
           className={` sticky top-0 z-[9999] bg-[#1919197b]  transition-all flex flex-row text-center min-w-md `}
-          onMouseEnter={() => setActiveMouse(true)}
-          onMouseLeave={() => setActiveMouse(false)}
         >
           {openFiles?.map((tab, index: number) => (
             <div

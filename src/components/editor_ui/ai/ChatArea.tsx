@@ -20,6 +20,7 @@ const ChatArea = memo(() => {
 
   const appendMessages = useChat((store) => store.appendMessages);
   const updateMessage = useChat((store) => store.updateMessage);
+  const project = useEditor((store) => store.project);
 
   const transport = useMemo(() => {
     // const apiKeyValue = apiKey;
@@ -31,6 +32,8 @@ const ChatArea = memo(() => {
   const { messages, submit, isLoading, stop } = useStream({
     transport,
   });
+
+  console.log("messages", messages);
   const formattedMessage = useMemo(() => {
     return messages.map(
       (msg) =>
@@ -62,7 +65,10 @@ const ChatArea = memo(() => {
           searchText={searchText}
           handleClick={(search) => {
             submit({
-              messages: [...messages, { content: search, type: "human" }],
+              messages: [...messages, { content: search, role: "human" }],
+              rootPath: project?.path,
+              fileTree: JSON.stringify(project?.tree),
+              name: "rashmika",
             });
           }}
           setSearchText={setSearchText}

@@ -17,10 +17,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     if (result.canceled || result.filePaths.length === 0) return null;
 
     const folderPath = result.filePaths[0];
-    console.log("folder path", folderPath);
-
- 
-
     function readDirRecursive(dir: string): unknown {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);

@@ -83,7 +83,7 @@ const TreeNode = memo(
           onClick={() => setActivePath(node.path)}
           className={`flex  w-full flex-shrink items-center gap-2 text-white  `}
           style={{
-            paddingLeft: `${isLastChild ? level + 5 * 12 : level * 12}px`,
+            paddingLeft: `${isLastChild ? level + 5 * 12 : level * 36}px`,
           }}
         >
           {node.children?.length !== undefined && node.type !== "file" && (

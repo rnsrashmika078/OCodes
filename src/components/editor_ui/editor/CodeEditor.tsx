@@ -41,6 +41,8 @@ const CodeEditor = () => {
       // if (project) {
       //   setProject(await window.fsmodule.refreshProject(project.path));
       // }
+
+      console.log("result", result);
     };
 
     saveChanges();
