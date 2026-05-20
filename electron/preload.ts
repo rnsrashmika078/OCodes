@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
     };
   },
 });
+contextBridge.exposeInMainWorld("vite", {
+  runViteServer: (projectPath: string) =>
+    ipcRenderer.invoke("run-vite", projectPath),
+});
 
 //file based bridge
 contextBridge.exposeInMainWorld("fsmodule", {

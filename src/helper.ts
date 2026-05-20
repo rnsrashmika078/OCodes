@@ -37,7 +37,6 @@ export function recursiveTreeSorting(nodes: Tree[]): Tree[] {
       }
       return 0;
     });
-  console.log("result", result);
   return result;
 }
 
@@ -57,7 +56,6 @@ export async function readProjectFileContent(tree: Tree[]) {
       };
 
       if (file.content) {
-        console.log("content file", file);
         contentArray.push(file);
       }
 
@@ -68,6 +66,5 @@ export async function readProjectFileContent(tree: Tree[]) {
   };
   await traverse(tree);
 
-  console.log("content array", contentArray);
   return contentArray;
 }

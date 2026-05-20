@@ -4,7 +4,7 @@ import {
   SandpackLayout,
   SandpackPreview,
 } from "@codesandbox/sandpack-react";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 type PreviewProps = {
   code: string;
 };
@@ -16,40 +16,28 @@ const Preview = memo(({ code }: PreviewProps) => {
   const basePath = useEditor((store) =>
     store.project?.path.replace(/\\/g, "/"),
   );
+  const project = useEditor((store) => store.project);
+  const hasRun = useRef(false);
 
-  const contentStructure = projectFileReadings.reduce(
-    (acc, pr) => {
-      const path = pr.path.replace(/\\/g, "/").split(`${basePath}`)[1];
 
-      if (path) {
-        acc[path] = pr.content;
-      }
+  const [url, setUrl] = useState<string>("");
 
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+  useEffect(() => {
+    if (!project?.path) return;
+    if (hasRun.current) return; // prevent duplicate runs
+    hasRun.current = true;
+
+    const runner = async () => {
+      const res = await window.vite.runViteServer(project?.path);
+      setUrl(res);
+      console.log("Resse", res);
+    };
+    runner();
+  }, [project?.path]);
 
   return (
     <div className=" h-full overflow-y-auto">
-      <SandpackProvider
-        template="react-ts"
-        style={{ height: "100%", width: "100%" }}
-        // customSetup={{
-        //   entry: "/index.js",
-        //   dependencies: {},
-        // }}
-        options={{
-          externalResources: ["https://cdn.tailwindcss.com"],
-        }}
-        files={{
-          ...contentStructure,
-        }}
-      >
-        <SandpackLayout style={{ height: "100%" }}>
-          <SandpackPreview style={{ height: "100%" }} />
-        </SandpackLayout>
-      </SandpackProvider>
+      <iframe src={`${url}`} className="w-full h-full border-0" />
     </div>
   );
 });

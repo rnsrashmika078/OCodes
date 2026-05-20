@@ -1,5 +1,5 @@
 import { ipcMain, dialog } from "electron";
-import { mkdirSync, readdirSync, statSync, watch, writeFileSync } from "fs";
+import { mkdirSync, readdirSync, statSync, watch, writeFileSync } from "fs";import { readdir, stat } from "fs/promises";
 import path, { basename, dirname, extname, join } from "path";
 import { readFileSync } from "fs";
 import fs from "fs";

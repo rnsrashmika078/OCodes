@@ -4,6 +4,10 @@ export {};
 
 declare global {
   interface Window {
+    // vite
+    vite: {
+      runViteServer: (projectPath: string) => Promise<string>;
+    };
     electronAPI: {
       getMetadata: (filePath: string) => Promise<unknown>;
       initializeLLM: () => Promise<string>;
@@ -24,17 +28,17 @@ declare global {
     updater: {
       onChecking(arg0: () => void): unknown;
       onError(arg0: (err: unknown) => void): unknown;
-      checkForUpdate: () => void; 
-      installUpdate: () => void; 
+      checkForUpdate: () => void;
+      installUpdate: () => void;
       onUpdateAvailable: (
         callback: (info: { version: string; releaseNotes?: string }) => void,
       ) => void;
-      onUpdateDownloaded: (callback: () => void) => void; 
+      onUpdateDownloaded: (callback: () => void) => void;
     };
     terminal: {
       create: () => Promise<boolean>;
       write: (data: string) => void;
-      onOutput: (callback: (data: string) => void) => void; 
+      onOutput: (callback: (data: string) => void) => void;
       resize?: (cols: number, rows: number) => void;
     };
 

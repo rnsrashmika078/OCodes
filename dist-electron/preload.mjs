@@ -38,6 +38,9 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
     };
   }
 });
+electron.contextBridge.exposeInMainWorld("vite", {
+  runViteServer: (projectPath) => electron.ipcRenderer.invoke("run-vite", projectPath)
+});
 electron.contextBridge.exposeInMainWorld("fsmodule", {
   createFile: (content, filepath, fileName, method) => electron.ipcRenderer.invoke("create-file", content, filepath, fileName, method),
   saveFile: (content, filepath, fileName) => electron.ipcRenderer.invoke("save-file", content, filepath, fileName),

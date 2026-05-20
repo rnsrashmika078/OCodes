@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from "electron";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { autoUpdater } from "electron-updater";
@@ -8,6 +9,7 @@ import { UserPreference } from "./storage";
 import { ollamaQuery } from "./ipcs/llmOperation";
 import "dotenv/config";
 import { registerFileSystemHandlers } from "./ipcs/index.js";
+import { spawn } from "child_process"; //vite
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -52,6 +54,22 @@ function createWindow() {
   }
 }
 
+//vite server
+let devProcess: any;
+ipcMain.handle("run-vite", async (_, projectPath: string) => {
+  devProcess = spawn("npm", ["run", "dev", "--", "--port", "5175"], {
+    cwd: projectPath,
+    shell: true,
+  });
+
+  devProcess.stdout.on("data", (data: any) => {
+    console.log("vite:", data.toString());
+  });
+  devProcess.stderr.on("data", (data: any) => {
+    console.error("vite error:", data.toString());
+  });
+  return `http://localhost:5175`;
+})
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();

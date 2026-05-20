@@ -29,7 +29,7 @@ const FileTreeV2 = () => {
         console.log("project changes happen");
         setCurrentPath(project.path);
         setProject(await window.fsmodule.refreshProject(project.path));
-        setProjectFileReadings(await readProjectFileContent(project.tree));
+        // setProjectFileReadings(await readProjectFileContent(project.tree));
       }
     });
     return () => {
