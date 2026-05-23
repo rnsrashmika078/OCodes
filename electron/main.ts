@@ -57,7 +57,7 @@ function createWindow() {
 //vite server
 let devProcess: any;
 ipcMain.handle("run-vite", async (_, projectPath: string) => {
-  devProcess = spawn("npm", ["run", "dev", "--", "--port", "5175"], {
+  devProcess =  spawn("npm", ["run", "dev", "--", "--port", "5175"], {
     cwd: projectPath,
     shell: true,
   });
@@ -69,7 +69,7 @@ ipcMain.handle("run-vite", async (_, projectPath: string) => {
     console.error("vite error:", data.toString());
   });
   return `http://localhost:5175`;
-})
+});
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();

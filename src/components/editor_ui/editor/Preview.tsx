@@ -19,20 +19,21 @@ const Preview = memo(({ code }: PreviewProps) => {
   const project = useEditor((store) => store.project);
   const hasRun = useRef(false);
 
-
   const [url, setUrl] = useState<string>("");
 
   useEffect(() => {
     if (!project?.path) return;
     if (hasRun.current) return; // prevent duplicate runs
     hasRun.current = true;
-
+    console.log("hasRun", hasRun.current);
     const runner = async () => {
       const res = await window.vite.runViteServer(project?.path);
       setUrl(res);
       console.log("Resse", res);
     };
     runner();
+
+    
   }, [project?.path]);
 
   return (

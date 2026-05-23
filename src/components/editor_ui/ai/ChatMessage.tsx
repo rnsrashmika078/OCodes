@@ -12,19 +12,76 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import * as prismaStyles from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
-import { memo } from "react";
+import { memo, useMemo } from "react";
+import { SubmitOptions } from "node_modules/@langchain/langgraph-sdk/dist/ui/types";
+import type { HITLRequest, HITLResponse } from "langchain";
+import { BaseStream, DefaultToolCall } from "@langchain/langgraph-sdk/react";
+import { BagTemplate } from "node_modules/@langchain/langgraph-sdk/dist/types.template";
+import { useEditor } from "@/lib/zustand/store";
+
 const ChatMessages = memo(
   ({
+    stream,
     messages,
     isLoading,
+    interrupt,
+    interrupts,
+    submit,
   }: {
+    stream: BaseStream<Record<string, unknown>, DefaultToolCall, BagTemplate>;
     messages: ExtendedMessage[];
     isLoading: boolean;
+    interrupt: any;
+    interrupts: any;
+    submit: (
+      values: Partial<Record<string, unknown>> | null | undefined,
+      options?:
+        | SubmitOptions<Record<string, unknown>, Record<string, unknown>>
+        | undefined,
+    ) => Promise<void>;
   }) => {
+    const hitlRequest = interrupt?.value as HITLRequest | undefined;
+    const actionRequests = hitlRequest?.actionRequests ?? [];
+    const reviewConfigs = hitlRequest?.reviewConfigs ?? [];
+    console.log("is array", Array.isArray(interrupts));
+    console.log("hitlRequest", hitlRequest);
+    console.log("interrupt", interrupt);
+
+    const project = useEditor((store) => store.project);
+
+    // const toolCallResult = useMemo(
+    //      return "YES"
+    //   })
+    //   [messages],
+    // )
+
+    const toolResult = useMemo(() => {
+      messages.map((msg) => {
+        if (typeof msg != "object") return null;
+        const tool_call_result = msg.tool_calls;
+        console.log("tool result from mapper", tool_call_result);
+        return tool_call_result;
+      });
+    }, [messages]);
+
+    console.log("toot result", toolResult);
+    const handleApprove = async () => {
+      if (!hitlRequest) return;
+
+      await submit({
+        interruptResponse: {
+          decisions: [{ type: "approve" }],
+        },
+        threadId: "chat123", // Maintain ID
+      });
+    };
     return (
       <>
         {messages.map((msg, messageIndex) => {
           if (typeof msg != "object") return false;
+
+          const lastIndex = messages?.at(-1)?.id;
+          console.log("status", msg.status);
 
           const isToolMsg = isToolMessage(msg);
           const isAiMsg = isAIMessage(msg);
@@ -35,6 +92,12 @@ const ChatMessages = memo(
           return (
             <div key={msg.id || messageIndex} className="p-2">
               {/* Message */}
+              {/* Loading spinner */}
+
+              {isLoading && isAiMsg && lastIndex == msg.id && (
+                // <div className="px-4 py-2 bg-gray-200 rounded-2xl w-fit animate-pulse"></div>
+                <div className="mb-2 w-fit px-2 py-2 animate-pulse bg-gray-50 rounded-2xl "></div>
+              )}
               <div
                 className={`flex w-full ${
                   isHumanMessage(msg)
@@ -49,13 +112,7 @@ const ChatMessages = memo(
                       : " w-full dark:bg-gray-900 text-white bg-gray-800"
                   }`}
                 >
-                  {/* Loading spinner */}
-                  {isLoading && isAiMsg && (
-                    // <div className="px-4 py-2 bg-gray-200 rounded-2xl w-fit animate-pulse"></div>
-                    <div className="mb-2 w-fit px-2 py-2 animate-pulse bg-gray-50 rounded-2xl "></div>
-                  )}
                   {/* Reasoning content */}
-
                   <Accordian
                     visibility={!!reasoningContent}
                     header="Thought Process"
@@ -77,6 +134,31 @@ const ChatMessages = memo(
                         >
                           <code>{JSON.stringify(t)}</code>
                         </Accordian>
+                      </div>
+                    ))}
+
+                  {/* interrupt call  */}
+                  {!isHumanMessage(msg) &&
+                    lastIndex == msg.id &&
+                    Array.isArray(interrupts) &&
+                    interrupts.map((int) => (
+                      <div
+                        key={int.id}
+                        className="border gap-2 flex  flex-col rounded-2xl p-2 border-blue-500"
+                      >
+                        <p className="italic">{int.value.actionRequests[0].description}</p>
+                        <button
+                          className=" bg-green-800 rounded-xl p-2"
+                          onClick={() => handleApprove()}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className=" bg-red-800 rounded-xl p-2"
+                          onClick={() => handleApprove()}
+                        >
+                          Denied
+                        </button>
                       </div>
                     ))}
                   {/* final message content */}

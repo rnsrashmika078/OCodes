@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo, useMemo, useState } from "react";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -23,19 +22,20 @@ const ChatArea = memo(() => {
   const project = useEditor((store) => store.project);
 
   const transport = useMemo(() => {
-    // const apiKeyValue = apiKey;
     return new FetchStreamTransport({
       apiUrl: "http://localhost:3000/api/chat",
     });
   }, []);
 
-  const { messages, submit, isLoading, stop } = useStream({
+  // { interrupt, interrupts, messages, submit, isLoading, stop }
+  const stream = useStream({
     transport,
   });
 
-  console.log("messages", messages);
+  console.log("interrupt", stream.interrupt);
+  console.log("interrupts", stream.interrupts);
   const formattedMessage = useMemo(() => {
-    return messages.map(
+    return stream.messages.map(
       (msg) =>
         ({
           ...msg,
@@ -44,17 +44,22 @@ const ChatArea = memo(() => {
           // tool_calls: msg.type === "ai" ? msg.tool_calls : null,
         }) as ExtendedMessage,
     );
-  }, [messages]);
+  }, [stream.messages]);
 
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
       <div className="w-full">
         {/* {JSON.stringify(toolCalls[0])} */}
+
         {formattedMessage && formattedMessage.length > 0 && (
           <ChatMessages
-            isLoading={isLoading}
+            stream={stream}
+            isLoading={stream.isLoading}
             // addToolApprovalResponse={addToolApprovalResponse}
             messages={formattedMessage}
+            interrupts={stream.interrupts}
+            interrupt={stream.interrupt}
+            submit={stream.submit}
             // regenerate={regenerate}
             // status={status}
           />
@@ -64,11 +69,14 @@ const ChatArea = memo(() => {
         <AskAI
           searchText={searchText}
           handleClick={(search) => {
-            submit({
-              messages: [...messages, { content: search, role: "human" }],
+            stream.submit({
+              messages: [
+                ...stream.messages,
+                { content: search, role: "human" },
+              ],
               rootPath: project?.path,
               fileTree: JSON.stringify(project?.tree),
-              name: "rashmika",
+              threadId: "chat123",
             });
           }}
           setSearchText={setSearchText}
