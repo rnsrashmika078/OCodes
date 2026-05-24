@@ -18,17 +18,21 @@ import type { HITLRequest, HITLResponse } from "langchain";
 import { BaseStream, DefaultToolCall } from "@langchain/langgraph-sdk/react";
 import { BagTemplate } from "node_modules/@langchain/langgraph-sdk/dist/types.template";
 import { useEditor } from "@/lib/zustand/store";
+import { DiDigitalOcean } from "react-icons/di";
+import { DiCssdeck } from "react-icons/di";
 
 const ChatMessages = memo(
   ({
-    stream,
+    // stream
+    progress,
     messages,
     isLoading,
     interrupt,
     interrupts,
     submit,
   }: {
-    stream: BaseStream<Record<string, unknown>, DefaultToolCall, BagTemplate>;
+    progress: string;
+    // stream: BaseStream<Record<string, unknown>, DefaultToolCall, BagTemplate>;
     messages: ExtendedMessage[];
     isLoading: boolean;
     interrupt: any;
@@ -66,8 +70,9 @@ const ChatMessages = memo(
 
     console.log("toot result", toolResult);
     const handleApprove = async () => {
+      if (!hitlRequest) return;
+
       //for javascript
-      // if (!hitlRequest) return;
 
       // await submit({
       //   interruptResponse: {
@@ -82,7 +87,7 @@ const ChatMessages = memo(
           type: "approve",
         })),
       };
-      await stream.submit(null, {
+      await submit(null,{
         command: { resume },
       });
     };
@@ -90,16 +95,26 @@ const ChatMessages = memo(
     const handleReject = async () => {
       if (!hitlRequest) return;
 
-      await submit({
-        interruptResponse: {
-          decisions: [
-            {
-              type: "reject",
-              message: "User reject the approval",
-            },
-          ],
-        },
-        threadId: "chat123",
+      // await submit({
+      //   interruptResponse: {
+      //     decisions: [
+      //       {
+      //         type: "reject",
+      //         message: "User reject the approval",
+      //       },
+      //     ],
+      //   },
+      //   threadId: "chat123",
+      // });
+
+      const resume: HITLResponse = {
+        decisions: actionRequests.map(() => ({
+          type: "reject",
+          reason: "The email tone is too aggressive. Please revise.",
+        })),
+      };
+      await submit(null, {
+        command: { resume },
       });
     };
     return (
@@ -111,366 +126,395 @@ const ChatMessages = memo(
           console.log("status", msg.status);
 
           const isToolMsg = isToolMessage(msg);
+          const isLastMessage = msg.id === messages.at(-1)?.id;
           const isAiMsg = isAIMessage(msg);
           const textContent = extractTextContent(msg.content);
           const reasoningContent = msg.additional_kwargs?.reasoning_content;
           const tool_call_result = msg.tool_calls;
 
           return (
-            <div key={msg.id || messageIndex} className="px-2 py-1 relative">
-              {/* Message */}
-              {/* Loading spinner */}
+            <>
+              <div key={msg.id || messageIndex} className="px-2 py-1 relative">
+                {/* Message */}
+                {/* Loading spinner */}
 
-              <div
-                className={`flex w-full ${
-                  isHumanMessage(msg)
-                    ? "justify-end "
-                    : "justify-start dark:bg-gray-900 text-white "
-                }`}
-              >
                 <div
-                  className={`rounded-lg  ${
+                  className={`flex w-full ${
                     isHumanMessage(msg)
-                      ? "bg-gray-900  dark:bg-gray-100 text-white dark:text-gray-900"
-                      : " w-full dark:bg-gray-900 text-white "
+                      ? "justify-end "
+                      : "justify-start dark:bg-gray-900 text-white "
                   }`}
                 >
-                  {/* Reasoning content */}
-                  <Accordian
-                    visibility={!!reasoningContent}
-                    header="Thought Process"
+                  <div
+                    className={`rounded-lg  ${
+                      isHumanMessage(msg)
+                        ? "bg-gray-900  dark:bg-gray-100 text-white dark:text-gray-900"
+                        : " w-full dark:bg-gray-900 text-white "
+                    }`}
                   >
-                    {isAiMsg && reasoningContent && (
-                      <ReactMarkdown>
-                        {extractTextContent(reasoningContent)}
+                    {/* Reasoning content */}
+                    <div className="">
+                      <Accordian
+                        visibility={!!reasoningContent}
+                        header="Thought Process"
+                      >
+                        {isAiMsg && reasoningContent && (
+                          <ReactMarkdown>
+                            {extractTextContent(reasoningContent)}
+                          </ReactMarkdown>
+                        )}
+                      </Accordian>
+                      {Array.isArray(tool_call_result) &&
+                        !isHumanMessage(msg) &&
+                        !textContent &&
+                        isLoading && (
+                          <div className="flex text-gray-300  gap-1 items-center">
+                            {
+                              <>
+                                <DiCssdeck size={30} className="animate-spin" />
+                                {progress}
+                              </>
+                            }
+                          </div>
+                        )}
+                    </div>
+
+                    {/* {tool_call} */}
+                    {Array.isArray(tool_call_result) &&
+                      tool_call_result.map((t) => (
+                        <div key={t.id} className="w-full">
+                          <Accordian
+                            visibility={!!tool_call_result}
+                            header={`Tool Call: ${JSON.stringify(t.name)}`}
+                          >
+                            <div className="px-2">
+                              {Object.entries(t.args).map(([key, value]) => (
+                                <tr key={key}>
+                                  <td className="px-2 py-1 font-bold">{key}</td>
+                                  <td className="px-2 py-1">{value}</td>
+                                </tr>
+                              ))}
+                            </div>
+                          </Accordian>
+                        </div>
+                      ))}
+
+                    {/* interrupt call  */}
+                    {!isHumanMessage(msg) &&
+                      lastIndex == msg.id &&
+                      Array.isArray(interrupts) &&
+                      interrupts.map((int) => (
+                        <div
+                          key={int.id}
+                          className="border gap-2 flex  flex-col rounded-2xl p-2 border-blue-500"
+                        >
+                          <p className="italic">
+                            {int.value.actionRequests[0].description}
+                          </p>
+                          <button
+                            className=" bg-green-800 rounded-xl p-2"
+                            onClick={() => handleApprove()}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className=" bg-red-800 rounded-xl p-2"
+                            onClick={() => handleReject()}
+                          >
+                            Denied
+                          </button>
+                        </div>
+                      ))}
+                    {/* final message content */}
+                    {isToolMsg ? ( //tool result
+                      <div className="whitespace-pre-wrap">
+                        <Accordian
+                          visibility={!!isToolMsg}
+                          header={`Tool Result`}
+                        >
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ children }) => (
+                                <p className="leading-relaxed m-2">
+                                  {children}
+                                </p>
+                              ),
+
+                              h1: ({ children }) => (
+                                <h1 className="text-2xl font-bold">
+                                  {children}
+                                </h1>
+                              ),
+
+                              h2: ({ children }) => (
+                                <h2 className="text-xl font-semibold">
+                                  {children}
+                                </h2>
+                              ),
+
+                              h3: ({ children }) => (
+                                <h3 className="text-lg font-semibold mt-2">
+                                  {children}
+                                </h3>
+                              ),
+                              h4: ({ children }) => (
+                                <h4 className="text-lg font-semibold mt-2">
+                                  {children}
+                                </h4>
+                              ),
+
+                              strong: ({ children }) => (
+                                <strong className="font-bold ">
+                                  {children}
+                                </strong>
+                              ),
+                              // em: ({ children }) => (
+                              //   <div className="border-l-4 rounded-md px-2 mt-2 bg-textarea">
+                              //     <em className="italic text-blue-500">
+                              //       {children}
+                              //     </em>
+                              //   </div>
+                              // ),
+                              table: ({ children }) => (
+                                <table border={1} className=" mt-5 mb-5">
+                                  {children}
+                                </table>
+                              ),
+                              th: ({ children }) => (
+                                <th className=" border-blue-500 px-0 bg-white text-black">
+                                  {children}
+                                </th>
+                              ),
+                              tr: ({ children }) => (
+                                <tr className=" border-blue-500  px-0 md:p-3">
+                                  {children}
+                                </tr>
+                              ),
+                              td: ({ children }) => (
+                                <td className="  border-blue-500 px-0 md:p-3">
+                                  {children}
+                                </td>
+                              ),
+                              br: ({ children }) => (
+                                <br className="">{children}</br>
+                              ),
+                              // a: ({ href, children }) => {
+                              //   {
+                              //     if (part.text.includes("pdf")) {
+                              //       return (
+                              //         <FaFilePdf
+                              //           // onClick={href}
+                              //           size={40}
+                              //           color="red"
+                              //           className="border p-1 border-gray-900 rounded-sm"
+                              //         />
+                              //       );
+                              //     }
+                              //     if (
+                              //       part.text.includes("png") ||
+                              //       part.text.includes("jpg")
+                              //     ) {
+                              //       return (
+                              //         <img
+                              //           className="mb-5"
+                              //           alt="image"
+                              //           src={children as string}
+                              //           width={150}
+                              //           height={150}
+                              //         ></img>
+                              //       );
+                              //     }
+                              //   }
+                              // },
+
+                              ul: ({ children }) => (
+                                <ul className="list-disc ">{children}</ul>
+                              ),
+
+                              ol: ({ children }) => (
+                                <ol className="list-decimal">{children}</ol>
+                              ),
+
+                              li: ({ children }) => (
+                                <li className="ml-5 ">{children}</li>
+                              ),
+
+                              blockquote: ({ children }) => (
+                                <blockquote className="">{children}</blockquote>
+                              ),
+
+                              hr: () => <hr className="border-gray-600 my-4" />,
+
+                              pre: ({ children }) => (
+                                <pre className="bg-black/80  rounded-lg overflow-x-auto my-3 text-sm">
+                                  {children}
+                                </pre>
+                              ),
+                              code: ({ className, children }) => {
+                                const isBlock =
+                                  className?.includes("language-");
+                                return isBlock ? (
+                                  //@ts-expect-error:ts error fix
+                                  <SyntaxHighlighter
+                                    language="javascript"
+                                    style={prismaStyles.atomDark}
+                                  >
+                                    {children}
+                                  </SyntaxHighlighter>
+                                ) : (
+                                  <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
+                            {textContent}
+                          </ReactMarkdown>
+                        </Accordian>
+                        {/* {JSON.stringify(msg.tool_calls)} */}
+                      </div>
+                    ) : (
+                      // final resulted message
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => (
+                            <p className="leading-relaxed m-2">{children}</p>
+                          ),
+
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-bold">{children}</h1>
+                          ),
+
+                          h2: ({ children }) => (
+                            <h2 className="text-xl font-semibold">
+                              {children}
+                            </h2>
+                          ),
+
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-semibold mt-2">
+                              {children}
+                            </h3>
+                          ),
+                          h4: ({ children }) => (
+                            <h4 className="text-lg font-semibold mt-2">
+                              {children}
+                            </h4>
+                          ),
+
+                          strong: ({ children }) => (
+                            <strong className="font-bold ">{children}</strong>
+                          ),
+                          // em: ({ children }) => (
+                          //   <div className="border-l-4 rounded-md px-2 mt-2 bg-textarea">
+                          //     <em className="italic text-blue-500">
+                          //       {children}
+                          //     </em>
+                          //   </div>
+                          // ),
+                          table: ({ children }) => (
+                            <table border={1} className=" mt-5 mb-5">
+                              {children}
+                            </table>
+                          ),
+                          th: ({ children }) => (
+                            <th className=" border-blue-500 px-0 bg-white text-black">
+                              {children}
+                            </th>
+                          ),
+                          tr: ({ children }) => (
+                            <tr className=" border-blue-500  px-0 md:p-3">
+                              {children}
+                            </tr>
+                          ),
+                          td: ({ children }) => (
+                            <td className="  border-blue-500 px-0 md:p-3">
+                              {children}
+                            </td>
+                          ),
+                          br: ({ children }) => (
+                            <br className="">{children}</br>
+                          ),
+                          // a: ({ href, children }) => {
+                          //   {
+                          //     if (part.text.includes("pdf")) {
+                          //       return (
+                          //         <FaFilePdf
+                          //           // onClick={href}
+                          //           size={40}
+                          //           color="red"
+                          //           className="border p-1 border-gray-900 rounded-sm"
+                          //         />
+                          //       );
+                          //     }
+                          //     if (
+                          //       part.text.includes("png") ||
+                          //       part.text.includes("jpg")
+                          //     ) {
+                          //       return (
+                          //         <img
+                          //           className="mb-5"
+                          //           alt="image"
+                          //           src={children as string}
+                          //           width={150}
+                          //           height={150}
+                          //         ></img>
+                          //       );
+                          //     }
+                          //   }
+                          // },
+
+                          ul: ({ children }) => (
+                            <ul className="list-disc ">{children}</ul>
+                          ),
+
+                          ol: ({ children }) => (
+                            <ol className="list-decimal">{children}</ol>
+                          ),
+
+                          li: ({ children }) => (
+                            <li className="ml-5 ">{children}</li>
+                          ),
+
+                          blockquote: ({ children }) => (
+                            <blockquote className="">{children}</blockquote>
+                          ),
+
+                          hr: () => <hr className="border-gray-600 my-4" />,
+
+                          pre: ({ children }) => (
+                            <pre className="bg-black/80  rounded-lg overflow-x-auto my-3 text-sm">
+                              {children}
+                            </pre>
+                          ),
+                          code: ({ className, children }) => {
+                            const isBlock = className?.includes("language-");
+                            return isBlock ? (
+                              //@ts-expect-error:ts error fix
+                              <SyntaxHighlighter
+                                language="javascript"
+                                style={prismaStyles.atomDark}
+                              >
+                                {children}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {textContent}
                       </ReactMarkdown>
                     )}
-                  </Accordian>
-
-                  {/* {tool_call} */}
-                  {Array.isArray(tool_call_result) &&
-                    tool_call_result.map((t) => (
-                      <div key={t.id} className="w-full">
-                        <Accordian
-                          visibility={!!tool_call_result}
-                          header={`Tool Call: ${JSON.stringify(t.name)}`}
-                        >
-                          <div className="px-2">
-                            {Object.entries(t.args).map(([key, value]) => (
-                              <tr key={key}>
-                                <td className="px-2 py-1 font-bold">{key}</td>
-                                <td className="px-2 py-1">{value}</td>
-                              </tr>
-                            ))}
-                          </div>
-                        </Accordian>
-                      </div>
-                    ))}
-
-                  {/* interrupt call  */}
-                  {!isHumanMessage(msg) &&
-                    lastIndex == msg.id &&
-                    Array.isArray(interrupts) &&
-                    interrupts.map((int) => (
-                      <div
-                        key={int.id}
-                        className="border gap-2 flex  flex-col rounded-2xl p-2 border-blue-500"
-                      >
-                        <p className="italic">
-                          {int.value.actionRequests[0].description}
-                        </p>
-                        <button
-                          className=" bg-green-800 rounded-xl p-2"
-                          onClick={() => handleApprove()}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          className=" bg-red-800 rounded-xl p-2"
-                          onClick={() => handleReject()}
-                        >
-                          Denied
-                        </button>
-                      </div>
-                    ))}
-                  {/* final message content */}
-                  {isToolMsg ? ( //tool result
-                    <div className="whitespace-pre-wrap">
-                      <Accordian
-                        visibility={!!isToolMsg}
-                        header={`Tool Result`}
-                      >
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            p: ({ children }) => (
-                              <p className="leading-relaxed m-2">{children}</p>
-                            ),
-
-                            h1: ({ children }) => (
-                              <h1 className="text-2xl font-bold">{children}</h1>
-                            ),
-
-                            h2: ({ children }) => (
-                              <h2 className="text-xl font-semibold">
-                                {children}
-                              </h2>
-                            ),
-
-                            h3: ({ children }) => (
-                              <h3 className="text-lg font-semibold mt-2">
-                                {children}
-                              </h3>
-                            ),
-                            h4: ({ children }) => (
-                              <h4 className="text-lg font-semibold mt-2">
-                                {children}
-                              </h4>
-                            ),
-
-                            strong: ({ children }) => (
-                              <strong className="font-bold ">{children}</strong>
-                            ),
-                            // em: ({ children }) => (
-                            //   <div className="border-l-4 rounded-md px-2 mt-2 bg-textarea">
-                            //     <em className="italic text-blue-500">
-                            //       {children}
-                            //     </em>
-                            //   </div>
-                            // ),
-                            table: ({ children }) => (
-                              <table border={1} className=" mt-5 mb-5">
-                                {children}
-                              </table>
-                            ),
-                            th: ({ children }) => (
-                              <th className=" border-blue-500 px-0 bg-white text-black">
-                                {children}
-                              </th>
-                            ),
-                            tr: ({ children }) => (
-                              <tr className=" border-blue-500  px-0 md:p-3">
-                                {children}
-                              </tr>
-                            ),
-                            td: ({ children }) => (
-                              <td className="  border-blue-500 px-0 md:p-3">
-                                {children}
-                              </td>
-                            ),
-                            br: ({ children }) => (
-                              <br className="">{children}</br>
-                            ),
-                            // a: ({ href, children }) => {
-                            //   {
-                            //     if (part.text.includes("pdf")) {
-                            //       return (
-                            //         <FaFilePdf
-                            //           // onClick={href}
-                            //           size={40}
-                            //           color="red"
-                            //           className="border p-1 border-gray-900 rounded-sm"
-                            //         />
-                            //       );
-                            //     }
-                            //     if (
-                            //       part.text.includes("png") ||
-                            //       part.text.includes("jpg")
-                            //     ) {
-                            //       return (
-                            //         <img
-                            //           className="mb-5"
-                            //           alt="image"
-                            //           src={children as string}
-                            //           width={150}
-                            //           height={150}
-                            //         ></img>
-                            //       );
-                            //     }
-                            //   }
-                            // },
-
-                            ul: ({ children }) => (
-                              <ul className="list-disc ">{children}</ul>
-                            ),
-
-                            ol: ({ children }) => (
-                              <ol className="list-decimal">{children}</ol>
-                            ),
-
-                            li: ({ children }) => (
-                              <li className="ml-5 ">{children}</li>
-                            ),
-
-                            blockquote: ({ children }) => (
-                              <blockquote className="">{children}</blockquote>
-                            ),
-
-                            hr: () => <hr className="border-gray-600 my-4" />,
-
-                            pre: ({ children }) => (
-                              <pre className="bg-black/80  rounded-lg overflow-x-auto my-3 text-sm">
-                                {children}
-                              </pre>
-                            ),
-                            code: ({ className, children }) => {
-                              const isBlock = className?.includes("language-");
-                              return isBlock ? (
-                                //@ts-expect-error:ts error fix
-                                <SyntaxHighlighter
-                                  language="javascript"
-                                  style={prismaStyles.atomDark}
-                                >
-                                  {children}
-                                </SyntaxHighlighter>
-                              ) : (
-                                <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
-                                  {children}
-                                </code>
-                              );
-                            },
-                          }}
-                        >
-                          {textContent}
-                        </ReactMarkdown>
-                      </Accordian>
-                      {/* {JSON.stringify(msg.tool_calls)} */}
-                    </div>
-                  ) : (
-                    // final resulted message
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        p: ({ children }) => (
-                          <p className="leading-relaxed m-2">{children}</p>
-                        ),
-
-                        h1: ({ children }) => (
-                          <h1 className="text-2xl font-bold">{children}</h1>
-                        ),
-
-                        h2: ({ children }) => (
-                          <h2 className="text-xl font-semibold">{children}</h2>
-                        ),
-
-                        h3: ({ children }) => (
-                          <h3 className="text-lg font-semibold mt-2">
-                            {children}
-                          </h3>
-                        ),
-                        h4: ({ children }) => (
-                          <h4 className="text-lg font-semibold mt-2">
-                            {children}
-                          </h4>
-                        ),
-
-                        strong: ({ children }) => (
-                          <strong className="font-bold ">{children}</strong>
-                        ),
-                        // em: ({ children }) => (
-                        //   <div className="border-l-4 rounded-md px-2 mt-2 bg-textarea">
-                        //     <em className="italic text-blue-500">
-                        //       {children}
-                        //     </em>
-                        //   </div>
-                        // ),
-                        table: ({ children }) => (
-                          <table border={1} className=" mt-5 mb-5">
-                            {children}
-                          </table>
-                        ),
-                        th: ({ children }) => (
-                          <th className=" border-blue-500 px-0 bg-white text-black">
-                            {children}
-                          </th>
-                        ),
-                        tr: ({ children }) => (
-                          <tr className=" border-blue-500  px-0 md:p-3">
-                            {children}
-                          </tr>
-                        ),
-                        td: ({ children }) => (
-                          <td className="  border-blue-500 px-0 md:p-3">
-                            {children}
-                          </td>
-                        ),
-                        br: ({ children }) => <br className="">{children}</br>,
-                        // a: ({ href, children }) => {
-                        //   {
-                        //     if (part.text.includes("pdf")) {
-                        //       return (
-                        //         <FaFilePdf
-                        //           // onClick={href}
-                        //           size={40}
-                        //           color="red"
-                        //           className="border p-1 border-gray-900 rounded-sm"
-                        //         />
-                        //       );
-                        //     }
-                        //     if (
-                        //       part.text.includes("png") ||
-                        //       part.text.includes("jpg")
-                        //     ) {
-                        //       return (
-                        //         <img
-                        //           className="mb-5"
-                        //           alt="image"
-                        //           src={children as string}
-                        //           width={150}
-                        //           height={150}
-                        //         ></img>
-                        //       );
-                        //     }
-                        //   }
-                        // },
-
-                        ul: ({ children }) => (
-                          <ul className="list-disc ">{children}</ul>
-                        ),
-
-                        ol: ({ children }) => (
-                          <ol className="list-decimal">{children}</ol>
-                        ),
-
-                        li: ({ children }) => (
-                          <li className="ml-5 ">{children}</li>
-                        ),
-
-                        blockquote: ({ children }) => (
-                          <blockquote className="">{children}</blockquote>
-                        ),
-
-                        hr: () => <hr className="border-gray-600 my-4" />,
-
-                        pre: ({ children }) => (
-                          <pre className="bg-black/80  rounded-lg overflow-x-auto my-3 text-sm">
-                            {children}
-                          </pre>
-                        ),
-                        code: ({ className, children }) => {
-                          const isBlock = className?.includes("language-");
-                          return isBlock ? (
-                            //@ts-expect-error:ts error fix
-                            <SyntaxHighlighter
-                              language="javascript"
-                              style={prismaStyles.atomDark}
-                            >
-                              {children}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {textContent}
-                    </ReactMarkdown>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           );
         })}
       </>

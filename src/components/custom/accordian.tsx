@@ -3,17 +3,28 @@ import { ReactNode, useState } from "react";
 import { IoIosArrowDropdownCircle } from "react-icons/io";
 
 interface AccordianProps {
-  children: ReactNode;
+  children?: ReactNode;
   header?: string;
   visibility: boolean;
+  variant?: "first" | "second";
 }
-const Accordian = ({ header, children, visibility = true }: AccordianProps) => {
+const Accordian = ({
+  header,
+  children,
+  visibility = true,
+  variant = "first",
+}: AccordianProps) => {
   const [isOpen, setIsOpen] = useState(true);
+
+  const variantsType = {
+    first: " flex justify-between bg-gray-900 p-2 rounded-xl items-center",
+    second: " flex justify-between bg-gray-900 p-2 rounded-xl items-center",
+  };
 
   if (!visibility) return;
   return (
     <div className="flex flex-col w-full p-2 border border-gray-500 rounded-xl mb-5">
-      <div className="flex justify-between bg-gray-900 p-2 rounded-xl items-center">
+      <div className={variantsType[variant]}>
         {header || "Accordion"}
         <IoIosArrowDropdownCircle
           className={`${isOpen ? "rotate-180" : "rotate-0"}`}

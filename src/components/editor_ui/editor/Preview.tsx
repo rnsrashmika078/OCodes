@@ -21,24 +21,28 @@ const Preview = memo(({ code }: PreviewProps) => {
 
   const [url, setUrl] = useState<string>("");
 
-  useEffect(() => {
-    if (!project?.path) return;
-    if (hasRun.current) return; // prevent duplicate runs
-    hasRun.current = true;
-    console.log("hasRun", hasRun.current);
-    const runner = async () => {
-      const res = await window.vite.runViteServer(project?.path);
-      setUrl(res);
-      console.log("Resse", res);
-    };
-    runner();
+  // useEffect(() => {
+  //   if (!project?.path) return;
+  //   if (hasRun.current) return; // prevent duplicate runs
+  //   hasRun.current = true;
+  //   console.log("hasRun", hasRun.current);
+  //   const runner = async () => {
+  //     const res = await window.vite.runViteServer(project?.path);
+  //     setUrl(res);
+  //     console.log("Resse", res);
+  //   };
+  //   runner();
 
-    
-  }, [project?.path]);
+  // }, [project?.path]);
+
+  console.log("Paaths", project?.path);
 
   return (
     <div className=" h-full overflow-y-auto">
-      <iframe src={`${url}`} className="w-full h-full border-0" />
+      <iframe
+        src={`${"http://localhost:5174/"}`}
+        className="w-full h-full border-0"
+      />
     </div>
   );
 });

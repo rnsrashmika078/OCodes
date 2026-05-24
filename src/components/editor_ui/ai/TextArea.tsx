@@ -3,14 +3,14 @@ import { BsPlus } from "react-icons/bs";
 import { MdRecordVoiceOver } from "react-icons/md";
 import { FaArrowUp } from "react-icons/fa6";
 
-interface ASKAI {
+interface TextArea {
   toggleSidebar?: (state?: boolean) => void;
   handleClick: (search: string) => void;
   searchText: string;
   setSearchText: React.Dispatch<React.SetStateAction<string>>;
 }
-const AskAI = memo(
-  ({ toggleSidebar, handleClick, setSearchText, searchText }: ASKAI) => {
+const TextArea = memo(
+  ({ toggleSidebar, handleClick, setSearchText, searchText }: TextArea) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSearch = (text: string) => {
@@ -67,5 +67,5 @@ const AskAI = memo(
     );
   },
 );
-AskAI.displayName = "AskAI";
-export default AskAI;
+TextArea.displayName = "TextArea";
+export default TextArea;
