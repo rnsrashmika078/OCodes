@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import electron from "vite-plugin-electron/simple";
 import react from "@vitejs/plugin-react";
-import { resolve } from "node:path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,7 +11,15 @@ export default defineConfig({
       main: {
         // Shortcut of `build.lib.entry`.
         entry: "electron/main.ts",
+        vite: {
+          build: {
+            rollupOptions: {
+              external: ["node-pty", "electron"],
+            },
+          },
+        },
       },
+
       preload: {
         // Shortcut of `build.rollupOptions.input`.
         // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.

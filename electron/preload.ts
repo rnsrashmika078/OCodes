@@ -68,5 +68,9 @@ contextBridge.exposeInMainWorld("fsmodule", {
     ipcRenderer.invoke("read-project", filePath),
   openFile: (filePath: string) => ipcRenderer.invoke("open", filePath),
 });
-
-// console.log("preload loaded");
+contextBridge.exposeInMainWorld("terminal", {
+  cwd: (directory: string) => ipcRenderer.send("terminal:cwd", directory),
+  send: (data: string) => ipcRenderer.send("terminal:write", data),
+  onData: (cb: (data: string) => void) =>
+    ipcRenderer.on("terminal:data", (_, data) => cb(data)),
+});

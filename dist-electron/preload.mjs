@@ -50,3 +50,8 @@ electron.contextBridge.exposeInMainWorld("fsmodule", {
   refreshProject: (filePath) => electron.ipcRenderer.invoke("read-project", filePath),
   openFile: (filePath) => electron.ipcRenderer.invoke("open", filePath)
 });
+electron.contextBridge.exposeInMainWorld("terminal", {
+  cwd: (directory) => electron.ipcRenderer.send("terminal:cwd", directory),
+  send: (data) => electron.ipcRenderer.send("terminal:write", data),
+  onData: (cb) => electron.ipcRenderer.on("terminal:data", (_, data) => cb(data))
+});

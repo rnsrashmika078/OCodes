@@ -1,4 +1,3 @@
-import AskAI from "../components/editor_ui/ai/AskAI";
 import { useGlobalKey } from "@/lib/hooks/useGlobalKey";
 import {
   ResizableHandle,
@@ -51,7 +50,7 @@ const EditorUI = () => {
                   <div className="flex flex-col flex-1 w-full h-full">
                     <div className="flex-1  custom-scrollbar h-full w-full">
                       <div className="bg-black text-green-400 font-mono p-2 h-full overflow-y-auto">
-                        {/* <ConsoleViewer /> */}
+                        <ConsoleViewer />
                       </div>
                     </div>
                   </div>
@@ -65,11 +64,7 @@ const EditorUI = () => {
                   <div className="relative w-full h-full">
                     <div className="absolute w-full h-full custom-scrollbar">
                       <ChatArea />
-                      {/* <ChatAreaV2 /> */}
                     </div>{" "}
-                    <div className="absolute bottom-0 w-full p-5">
-                      {/* <AskAI /> */}
-                    </div>
                   </div>
                 </div>
               </ResizablePanel>

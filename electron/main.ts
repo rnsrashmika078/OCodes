@@ -6,10 +6,10 @@ import { autoUpdater } from "electron-updater";
 import path from "node:path";
 import dotenv from "dotenv";
 import { UserPreference } from "./storage";
-import { ollamaQuery } from "./ipcs/llmOperation";
 import "dotenv/config";
 import { registerFileSystemHandlers } from "./ipcs/index.js";
 import { spawn } from "child_process"; //vite
+import { initTerminal } from "./terminal.js";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,9 +55,11 @@ function createWindow() {
 }
 
 //vite server
+
+let cwd: string;
 let devProcess: any;
 ipcMain.handle("run-vite", async (_, projectPath: string) => {
-  devProcess =  spawn("npm", ["run", "dev", "--", "--port", "5175"], {
+  devProcess = spawn("npm", ["run", "dev", "--", "--port", "5175"], {
     cwd: projectPath,
     shell: true,
   });
@@ -70,6 +72,9 @@ ipcMain.handle("run-vite", async (_, projectPath: string) => {
   });
   return `http://localhost:5175`;
 });
+
+// terminal
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
@@ -88,10 +93,10 @@ app.whenReady().then(() => {
   // startChatServer(3000);
   createWindow();
   UserPreference();
-  ollamaQuery();
-
   registerFileSystemHandlers(win);
   // handleFileOperations(win);
+
+  if (win) initTerminal(win);
 
   autoUpdater.checkForUpdatesAndNotify();
 });

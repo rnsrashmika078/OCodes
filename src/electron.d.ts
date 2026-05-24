@@ -10,16 +10,12 @@ declare global {
     };
     electronAPI: {
       getMetadata: (filePath: string) => Promise<unknown>;
-      initializeLLM: () => Promise<string>;
       onFsChange: (
         callback: (
           event: string,
           data: { event: string; filename: string; fullPath: string },
         ) => void,
       ) => () => void;
-    };
-    chatgpt: {
-      ask: (prompt: string) => Promise<Reply>;
     };
     auth: {
       setAuthUser: (AuthUser: AuthUser) => void;
@@ -36,10 +32,10 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => void;
     };
     terminal: {
-      create: () => Promise<boolean>;
-      write: (data: string) => void;
-      onOutput: (callback: (data: string) => void) => void;
-      resize?: (cols: number, rows: number) => void;
+      cwd(directory: string): void;
+      send(data: string): void;
+      onData(cb: (data: string) => void): () => void;
+      // resize(cols: number, rows: number): void;
     };
 
     fsmodule: {
