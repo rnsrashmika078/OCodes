@@ -66,13 +66,40 @@ const ChatMessages = memo(
 
     console.log("toot result", toolResult);
     const handleApprove = async () => {
+      //for javascript
+      // if (!hitlRequest) return;
+
+      // await submit({
+      //   interruptResponse: {
+      //     decisions: [{ type: "approve" }],
+      //   },
+      //   threadId: "chat123",
+      // });
+
+      //for python
+      const resume: HITLResponse = {
+        decisions: actionRequests.map(() => ({
+          type: "approve",
+        })),
+      };
+      await stream.submit(null, {
+        command: { resume },
+      });
+    };
+
+    const handleReject = async () => {
       if (!hitlRequest) return;
 
       await submit({
         interruptResponse: {
-          decisions: [{ type: "approve" }],
+          decisions: [
+            {
+              type: "reject",
+              message: "User reject the approval",
+            },
+          ],
         },
-        threadId: "chat123", // Maintain ID
+        threadId: "chat123",
       });
     };
     return (
@@ -90,26 +117,22 @@ const ChatMessages = memo(
           const tool_call_result = msg.tool_calls;
 
           return (
-            <div key={msg.id || messageIndex} className="p-2">
+            <div key={msg.id || messageIndex} className="px-2 py-1 relative">
               {/* Message */}
               {/* Loading spinner */}
 
-              {isLoading && isAiMsg && lastIndex == msg.id && (
-                // <div className="px-4 py-2 bg-gray-200 rounded-2xl w-fit animate-pulse"></div>
-                <div className="mb-2 w-fit px-2 py-2 animate-pulse bg-gray-50 rounded-2xl "></div>
-              )}
               <div
                 className={`flex w-full ${
                   isHumanMessage(msg)
                     ? "justify-end "
-                    : "justify-start dark:bg-gray-900 text-white bg-gray-800"
+                    : "justify-start dark:bg-gray-900 text-white "
                 }`}
               >
                 <div
-                  className={`rounded-lg px-4  py-3 ${
+                  className={`rounded-lg  ${
                     isHumanMessage(msg)
                       ? "bg-gray-900  dark:bg-gray-100 text-white dark:text-gray-900"
-                      : " w-full dark:bg-gray-900 text-white bg-gray-800"
+                      : " w-full dark:bg-gray-900 text-white "
                   }`}
                 >
                   {/* Reasoning content */}
@@ -124,15 +147,22 @@ const ChatMessages = memo(
                     )}
                   </Accordian>
 
-                  {/* {tool_call_result} */}
+                  {/* {tool_call} */}
                   {Array.isArray(tool_call_result) &&
-                    tool_call_result.map((t, idx) => (
+                    tool_call_result.map((t) => (
                       <div key={t.id} className="w-full">
                         <Accordian
                           visibility={!!tool_call_result}
-                          header={`Tool Call: ${t.name.toUpperCase()}`}
+                          header={`Tool Call: ${JSON.stringify(t.name)}`}
                         >
-                          <code>{JSON.stringify(t)}</code>
+                          <div className="px-2">
+                            {Object.entries(t.args).map(([key, value]) => (
+                              <tr key={key}>
+                                <td className="px-2 py-1 font-bold">{key}</td>
+                                <td className="px-2 py-1">{value}</td>
+                              </tr>
+                            ))}
+                          </div>
                         </Accordian>
                       </div>
                     ))}
@@ -146,7 +176,9 @@ const ChatMessages = memo(
                         key={int.id}
                         className="border gap-2 flex  flex-col rounded-2xl p-2 border-blue-500"
                       >
-                        <p className="italic">{int.value.actionRequests[0].description}</p>
+                        <p className="italic">
+                          {int.value.actionRequests[0].description}
+                        </p>
                         <button
                           className=" bg-green-800 rounded-xl p-2"
                           onClick={() => handleApprove()}
@@ -155,7 +187,7 @@ const ChatMessages = memo(
                         </button>
                         <button
                           className=" bg-red-800 rounded-xl p-2"
-                          onClick={() => handleApprove()}
+                          onClick={() => handleReject()}
                         >
                           Denied
                         </button>

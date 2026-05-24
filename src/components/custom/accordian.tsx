@@ -12,8 +12,8 @@ const Accordian = ({ header, children, visibility = true }: AccordianProps) => {
 
   if (!visibility) return;
   return (
-    <div className="flex flex-col w-full  border p-2 border-l-4 border-red-500 mb-5">
-      <div className="flex justify-between">
+    <div className="flex flex-col w-full p-2 border border-gray-500 rounded-xl mb-5">
+      <div className="flex justify-between bg-gray-900 p-2 rounded-xl items-center">
         {header || "Accordion"}
         <IoIosArrowDropdownCircle
           className={`${isOpen ? "rotate-180" : "rotate-0"}`}

@@ -23,17 +23,22 @@ const ChatArea = memo(() => {
 
   const transport = useMemo(() => {
     return new FetchStreamTransport({
+      // apiUrl: "http://localhost:3000/api/chat",
       apiUrl: "http://localhost:3000/api/chat",
+      // apiUrl: "http://localhost:2024",
+      // assistantId: "agent",
     });
   }, []);
 
   // { interrupt, interrupts, messages, submit, isLoading, stop }
   const stream = useStream({
-    transport,
+    // transport,
+    apiUrl: "http://localhost:2024",
+    // apiUrl: "http://localhost:8000/api/chat",
+    assistantId: "agent",
   });
 
-  console.log("interrupt", stream.interrupt);
-  console.log("interrupts", stream.interrupts);
+  console.log("messages", stream.messages);
   const formattedMessage = useMemo(() => {
     return stream.messages.map(
       (msg) =>
@@ -65,22 +70,37 @@ const ChatArea = memo(() => {
           />
         )}
       </div>
-      <div className="p-5">
-        <AskAI
-          searchText={searchText}
-          handleClick={(search) => {
-            stream.submit({
-              messages: [
-                ...stream.messages,
-                { content: search, role: "human" },
-              ],
-              rootPath: project?.path,
-              fileTree: JSON.stringify(project?.tree),
-              threadId: "chat123",
-            });
-          }}
-          setSearchText={setSearchText}
-        />
+      <div className="p-5 sticky bottom-0">
+        <div className="relative">
+          <AskAI
+            searchText={searchText}
+            handleClick={(search) => {
+              // stream.submit({
+              //   messages: [
+              //     ...stream.messages,
+              //     { content: search, role: "human" },
+              //   ],
+              //   rootPath: project?.path,
+              //   fileTree: JSON.stringify(project?.tree),
+              //   threadId: "chat123",
+              // });
+              stream.submit({
+                messages: [{ type: "human" as const, content: search }],
+              });
+            }}
+            setSearchText={setSearchText}
+          />
+          <div className="absolute -top-10 -translate-x-1/2 left-1/2">
+             {stream.isLoading && (
+            <div className=" absolute  flex space-1 -bottom-5 left-1/2 -translate-x-1/2 gap-2 bg-white p-1 rounded-2xl">
+              <span className=" w-2 h-2 animate-pulse bg-black rounded-2xl"></span>
+              <span className=" w-2 h-2 animate-pulse bg-black rounded-2xl delay-150 "></span>
+              <span className=" w-2 h-2 animate-pulse bg-black rounded-2xl delay-300"></span>
+            </div>
+          )}
+          </div>
+         
+        </div>
       </div>
     </div>
   );
