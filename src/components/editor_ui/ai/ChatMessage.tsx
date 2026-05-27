@@ -41,7 +41,7 @@ const ChatMessages = memo(
     ) => Promise<void>;
   }) => {
     console.log("Rendering: ChatMessages.tsx ");
-    //only for next js 
+    //only for next js
     const [filteredTree, setFilteredTree] = useState<Tree[] | undefined>(
       undefined,
     );
@@ -71,8 +71,6 @@ const ChatMessages = memo(
     const handleApprove = async () => {
       if (!hitlRequest) return;
 
-      //for javascript
-
       await submit({
         interruptResponse: {
           decisions: [{ type: "approve" }],
@@ -81,16 +79,6 @@ const ChatMessages = memo(
         rootPath,
         fileTree: filteredTree,
       });
-
-      //for python
-      // const resume: HITLResponse = {
-      //   decisions: actionRequests.map(() => ({
-      //     type: "approve",
-      //   })),
-      // };
-      // await submit(null, {
-      //   command: { resume },
-      // });
     };
 
     const handleReject = async () => {
@@ -109,16 +97,6 @@ const ChatMessages = memo(
         rootPath,
         fileTree: filteredTree,
       });
-
-      // const resume: HITLResponse = {
-      //   decisions: actionRequests.map(() => ({
-      //     type: "reject",
-      //     reason: "The email tone is too aggressive. Please revise.",
-      //   })),
-      // };
-      // await submit(null, {
-      //   command: { resume },
-      // });
     };
 
     //only for next js
@@ -136,7 +114,6 @@ const ChatMessages = memo(
       filter();
     }, [fileTree]);
 
-    
     return (
       <>
         {messages.map((msg, messageIndex) => {
