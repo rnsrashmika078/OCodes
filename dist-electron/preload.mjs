@@ -53,5 +53,6 @@ electron.contextBridge.exposeInMainWorld("fsmodule", {
 electron.contextBridge.exposeInMainWorld("terminal", {
   cwd: (directory) => electron.ipcRenderer.send("terminal:cwd", directory),
   send: (data) => electron.ipcRenderer.send("terminal:write", data),
-  onData: (cb) => electron.ipcRenderer.on("terminal:data", (_, data) => cb(data))
+  onData: (cb) => electron.ipcRenderer.on("terminal:data", (_, data) => cb(data)),
+  resize: (cols, rows) => electron.ipcRenderer.send("terminal:resize", cols, rows)
 });

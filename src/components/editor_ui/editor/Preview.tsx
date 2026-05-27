@@ -35,7 +35,6 @@ const Preview = memo(({ code }: PreviewProps) => {
 
   // }, [project?.path]);
 
-  console.log("Paaths", project?.path);
 
   return (
     <div className=" h-full overflow-y-auto">

@@ -2,12 +2,14 @@ import { BrowserWindow, ipcMain } from "electron";
 import pty from "node-pty";
 import { string } from "zod";
 
-const shell = process.platform === "win32" ? "cmd.exe" : "bash";
+// const shell = process.platform === "win32" ? "cmd.exe" : "bash";
+const shell = process.platform === "win32" ? "powershell.exe" : "bash";
 export const initTerminal = (win: BrowserWindow) => {
+  const policy_powershell =
+    "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned";
   let ptyProcess: pty.IPty | null = null;
 
   ipcMain.on("terminal:cwd", (_, directory) => {
-    console.log("cwd received:", directory);
 
     if (ptyProcess) {
       ptyProcess.kill();
@@ -20,6 +22,7 @@ export const initTerminal = (win: BrowserWindow) => {
       cwd: directory,
       env: process.env,
     });
+    // ptyProcess.write(policy_powershell);
 
     ptyProcess.onData((data) => {
       win.webContents.send("terminal:data", data);
@@ -31,6 +34,7 @@ export const initTerminal = (win: BrowserWindow) => {
   });
 
   ipcMain.on("terminal:resize", (_, cols, rows) => {
+  
     ptyProcess?.resize(cols, rows);
   });
 };

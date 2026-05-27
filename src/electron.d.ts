@@ -35,7 +35,7 @@ declare global {
       cwd(directory: string): void;
       send(data: string): void;
       onData(cb: (data: string) => void): () => void;
-      // resize(cols: number, rows: number): void;
+      resize(cols: number, rows: number): void;
     };
 
     fsmodule: {

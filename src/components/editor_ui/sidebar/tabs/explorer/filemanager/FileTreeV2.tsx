@@ -15,21 +15,17 @@ import {
 const FileTreeV2 = () => {
   const setProject = useEditor((s) => s.setProject);
   const setCurrentPath = useEditor((s) => s.setClickedFileCurrentPath);
-  const setProjectFileReadings = useEditor((s) => s.setProjectFileReadings);
-
+  const setCWD = useEditor((s) => s.setCurrentWorkingDirectory);
   const project = useEditor((s) => s.project);
   const currentPath = useEditor((s) => s.clickedFileCurrentPath);
 
   const [emptyFileId, setEmptyFileId] = useState<string>("");
-  //file watcher ---> listening to evenry changes of the root directory / open directory
 
   useEffect(() => {
     const unsubscribe = window.electronAPI.onFsChange(async (_event, _data) => {
       if (project?.path) {
-        console.log("project changes happen");
         setCurrentPath(project.path);
         setProject(await window.fsmodule.refreshProject(project.path));
-        // setProjectFileReadings(await readProjectFileContent(project.tree));
       }
     });
     return () => {
@@ -57,6 +53,7 @@ const FileTreeV2 = () => {
           className="text-white border p-2 text-xs rounded-xl bg-gray-900"
           onClick={async () => {
             const result = await window.fsmodule.pick();
+            setCWD(result.path);
             if (!result) return;
             const prevProject = project;
             if (result.path) {
@@ -143,9 +140,7 @@ const FileTreeV2 = () => {
             <BiRefresh
               className="icon"
               onClick={async () => {
-                console.log("refreshing");
                 const arr = await readProjectFileContent(project.tree);
-                console.log("arr", arr);
               }}
             />
           </div>

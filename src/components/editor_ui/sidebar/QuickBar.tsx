@@ -39,6 +39,9 @@ const QuickBar = memo(() => {
   ];
 
   const [hoverTab, setHoverTab] = useState<HoverProps>();
+
+  console.log("Rendering: QuickBar.tsx ");
+
   return (
     <div
       className="relative flex flex-col bg-gray-900 justify-between items-center"

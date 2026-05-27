@@ -6,7 +6,6 @@ import fs from "fs/promises";
 //import a project or folder
 export const resolvePath = () => {
   const desktop = path.join(os.homedir(), "Desktop", "fuck-this-shit.txt");
-  console.log("desktop location", desktop);
   return desktop;
 };
 

@@ -18,7 +18,6 @@ interface ChartProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF"];
 
 const Chart = memo(({ data }: ChartProps) => {
-  console.log("content", data);
 
   if (data?.type === "pie") {
     return (

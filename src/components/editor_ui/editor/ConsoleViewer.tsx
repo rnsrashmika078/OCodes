@@ -18,7 +18,6 @@ export default function ConsoleViewer() {
       cursorBlink: true,
       fontSize: 14,
       fontFamily: "Fira Code, monospace",
-     
     });
 
     const fitAddon = new FitAddon();
@@ -32,23 +31,21 @@ export default function ConsoleViewer() {
     const webLinksAddon = new WebLinksAddon();
     term.loadAddon(webLinksAddon);
     term.onData((data) => {
-      console.log("typed:", data);
       window.terminal.send(data);
     });
 
     const cleanup = window.terminal.onData((data) => {
       term.write(data);
     });
-
+    window.addEventListener("resize", () => {
+      fitAddon.fit();
+      window.terminal.resize(term.cols, term.rows);
+    });
     return () => {
       cleanup?.();
       term.dispose();
     };
   }, [path]);
 
-  return (
-    <div className="w-full h-full bg-[#0d1117] p-2 rounded-lg overflow-hidden">
-      <div ref={termRef} className="w-full h-full" />
-    </div>
-  );
+  return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
 }

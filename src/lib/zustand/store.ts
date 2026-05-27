@@ -21,6 +21,7 @@ type FileOperation = {
   openFiles: OpenFile[];
   activeFile: OpenFile | null;
   clickedFileCurrentPath: string | null;
+  cwd: string;
 
   projectFileReadings: TProjectRead[];
 
@@ -35,6 +36,7 @@ type FileOperation = {
   setProject: (project: FilePath | null) => void;
   setExpandedStatus: (id: string) => void;
   setFilterFile: (id: string) => void;
+  setCurrentWorkingDirectory: (cwd: string) => void;
 
   setUpdateProjectFile: (updateFile: OpenFile) => void;
   setOpenFiles: (file: OpenFile) => void;
@@ -59,6 +61,7 @@ export const useEditor = create<FileOperation>((set) => ({
   authUser: null,
   loading: false,
   userPreference: { netstats: false, authstats: false },
+  cwd: "",
 
   height: window.innerHeight,
   copiedText: null,
@@ -88,6 +91,12 @@ export const useEditor = create<FileOperation>((set) => ({
   setProjectFileReadings: (readings) =>
     set(() => ({ projectFileReadings: readings })),
   setProject: (filepath) => set(() => ({ project: filepath })),
+
+  //set current working directory
+  setCurrentWorkingDirectory: (cwd: string) =>
+    set(() => ({
+      cwd,
+    })),
   setExpandedStatus: (id) =>
     set((state) => {
       if (!state.project) return { project: null };

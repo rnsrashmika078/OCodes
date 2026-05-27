@@ -73,4 +73,6 @@ contextBridge.exposeInMainWorld("terminal", {
   send: (data: string) => ipcRenderer.send("terminal:write", data),
   onData: (cb: (data: string) => void) =>
     ipcRenderer.on("terminal:data", (_, data) => cb(data)),
+  resize: (cols: number, rows: number) =>
+    ipcRenderer.send("terminal:resize", cols, rows),
 });

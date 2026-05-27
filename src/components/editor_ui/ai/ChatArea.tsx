@@ -1,13 +1,6 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import ReactMarkdown from "react-markdown";
-import { v4 as uuid } from "uuid";
-import { CgSpinner } from "react-icons/cg";
-import GenerativeComponent from "@/components/generative_component/GenerativeComponent";
-import { ExtendedMessage } from "@/lib/types/type";
-import { useChat, useEditor } from "@/lib/zustand/store";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { ExtendedMessage, Tree } from "@/lib/types/type";
+import { useEditor } from "@/lib/zustand/store";
 import {
   FetchStreamTransport,
   useStream,
@@ -18,12 +11,14 @@ const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
 
   const [progress, setProgress] = useState<string>("");
-  const appendMessages = useChat((store) => store.appendMessages);
-  const updateMessage = useChat((store) => store.updateMessage);
-  const project = useEditor((store) => store.project);
+  const projectTree = useEditor((store) => store.project?.tree);
+  const projectPath = useEditor((store) => store.project?.path);
+  const cwd = useEditor((store) => store.cwd);
+  const [filteredTree, setFilteredTree] = useState<Tree[] | undefined>(
+    undefined,
+  );
 
   const handleCustomEvent = useCallback((data: unknown) => {
-    console.log("custom event", data);
     setProgress(data as string);
   }, []);
 
@@ -45,7 +40,6 @@ const ChatArea = memo(() => {
     onCustomEvent: handleCustomEvent,
   });
 
-  console.log("messages", stream.messages);
   const formattedMessage = useMemo(() => {
     return stream.messages.map(
       (msg) =>
@@ -58,7 +52,32 @@ const ChatArea = memo(() => {
     );
   }, [stream.messages]);
 
-  // console.log("stream writers", stream)
+  const removeNodeModulesRecursively = (nodes: Tree[]): Tree[] => {
+    return nodes
+      .filter((node) => node.name !== "node_modules")
+      .map((node) => ({
+        ...node,
+        children: node.children
+          ? removeNodeModulesRecursively(node.children)
+          : undefined,
+      }));
+  };
+  useEffect(() => {
+    if (!projectTree) return;
+    const filter = () => {
+      if (!projectTree) {
+        setFilteredTree([]);
+        return;
+      }
+      const filterTree = removeNodeModulesRecursively(projectTree);
+      setFilteredTree(filterTree);
+      return filterTree;
+    };
+    filter();
+  }, [projectTree]);
+
+  console.log("Rendering: ChatArea.tsx ");
+
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">
       <div className="w-full">
@@ -88,8 +107,9 @@ const ChatArea = memo(() => {
                   ...stream.messages,
                   { content: search, role: "human" },
                 ],
-                rootPath: project?.path,
-                fileTree: JSON.stringify(project?.tree),
+                rootPath: projectPath,
+                cwd,
+                fileTree: filteredTree,
                 threadId: "chat123",
               });
               setSearchText("");

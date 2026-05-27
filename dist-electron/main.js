@@ -18,7 +18,7 @@ import require$$0$2 from "stream";
 import require$$4$2 from "util";
 import require$$5$1 from "assert";
 import require$$1$2, { join, dirname, extname, basename } from "path";
-import require$$1$6, { spawn } from "child_process";
+import require$$1$6 from "child_process";
 import require$$0$3 from "events";
 import require$$0$4, { randomFillSync, randomUUID } from "crypto";
 import require$$1$3 from "tty";
@@ -29187,7 +29187,6 @@ function registerFileSystemHandlers(mainWindow) {
     function readDirRecursive(dir) {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);
-        console.log("filePath", filePath);
         const stats = statSync(filePath);
         return stats.isDirectory() ? {
           id: v4(),
@@ -29284,7 +29283,6 @@ function registerFileSystemHandlers(mainWindow) {
         }
         const filePath = require$$1$2.join(filepath);
         writeFileSync$1(filePath, content ?? "", "utf8");
-        console.log("Saving file is done");
         return {
           success: true,
           filePath,
@@ -29348,7 +29346,6 @@ function registerFileSystemHandlers(mainWindow) {
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
   function watchProjectDirectory(folderPath) {
-    console.log("watcher run");
     const watcher = watch(
       folderPath,
       { recursive: true },
@@ -29370,11 +29367,10 @@ function registerFileSystemHandlers(mainWindow) {
     return watcher;
   }
 }
-const shell = process.platform === "win32" ? "cmd.exe" : "bash";
+const shell = process.platform === "win32" ? "powershell.exe" : "bash";
 const initTerminal = (win2) => {
   let ptyProcess = null;
   ipcMain$1.on("terminal:cwd", (_, directory) => {
-    console.log("cwd received:", directory);
     if (ptyProcess) {
       ptyProcess.kill();
     }
@@ -29428,20 +29424,6 @@ function createWindow() {
     win.loadURL(`file://${path.join(RENDERER_DIST, "index.html")}`);
   }
 }
-let devProcess;
-ipcMain$1.handle("run-vite", async (_, projectPath) => {
-  devProcess = spawn("npm", ["run", "dev", "--", "--port", "5175"], {
-    cwd: projectPath,
-    shell: true
-  });
-  devProcess.stdout.on("data", (data) => {
-    console.log("vite:", data.toString());
-  });
-  devProcess.stderr.on("data", (data) => {
-    console.error("vite error:", data.toString());
-  });
-  return `http://localhost:5175`;
-});
 app$1.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app$1.quit();

@@ -1,13 +1,12 @@
-import { UIDataTypes, UIMessagePart, UITools } from "ai";
 import { FaFilePdf } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import * as prismaStyles from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
 type MarkdownTypes = {
-  part: { type: string; text: string };
+  text: string;
 };
-const MarkDown = ({ part }: MarkdownTypes) => {
+const MarkDown = ({ text }: MarkdownTypes) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -56,31 +55,6 @@ const MarkDown = ({ part }: MarkdownTypes) => {
           <td className="  border-blue-500 px-0 md:p-3">{children}</td>
         ),
         br: ({ children }) => <br className="">{children}</br>,
-        a: ({ href, children }) => {
-          {
-            if (part.text.includes("pdf")) {
-              return (
-                <FaFilePdf
-                  // onClick={href}
-                  size={40}
-                  color="red"
-                  className="border p-1 border-gray-900 rounded-sm"
-                />
-              );
-            }
-            if (part.text.includes("png") || part.text.includes("jpg")) {
-              return (
-                <img
-                  className="mb-5"
-                  alt="image"
-                  src={children as string}
-                  width={150}
-                  height={150}
-                ></img>
-              );
-            }
-          }
-        },
 
         ul: ({ children }) => <ul className="list-disc ">{children}</ul>,
 
@@ -100,14 +74,12 @@ const MarkDown = ({ part }: MarkdownTypes) => {
           </pre>
         ),
         code: ({ className, children }) => {
+          const match = /language-(\w+)/.exec(className || "");
+          const language = match ? match[1] : "text";
           const isBlock = className?.includes("language-");
           return isBlock ? (
-            //@ts-expect-error:ts error fix
-            <SyntaxHighlighter
-              language="javascript"
-              style={prismaStyles.atomDark}
-            >
-              {children}
+            <SyntaxHighlighter language={language} style={prismaStyles.vscDarkPlus  }>
+              {String(children)}
             </SyntaxHighlighter>
           ) : (
             <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
@@ -117,7 +89,7 @@ const MarkDown = ({ part }: MarkdownTypes) => {
         },
       }}
     >
-      {part?.text}
+      {text}
     </ReactMarkdown>
   );
 };

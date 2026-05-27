@@ -1,9 +1,11 @@
-import React from "react";
+import React, { memo } from "react";
 interface Props {
   tip: string;
   children?: React.ReactNode;
 }
-const ToolTip = ({ tip, children }: Props) => {
+const ToolTip = memo(({ tip, children }: Props) => {
+  console.log("Rendering: Sections.tsx ");
+
   return (
     <div className="relative w-full text-xs font-custom rounded-r-[5px] bg-black p-1 rounded-l-[5px] px-3 border border-gray-500">
       {/* Arrow */}
@@ -18,6 +20,8 @@ const ToolTip = ({ tip, children }: Props) => {
       {children}
     </div>
   );
-};
+});
+
+ToolTip.displayName = "ToolTip";
 
 export default ToolTip;

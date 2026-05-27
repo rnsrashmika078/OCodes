@@ -21,7 +21,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     function readDirRecursive(dir: string): unknown {
       return readdirSync(dir).map((name) => {
         const filePath = join(dir, name);
-        console.log("filePath", filePath);
 
         const stats = statSync(filePath);
 
@@ -152,7 +151,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
         const filePath = path.join(filepath);
         writeFileSync(filePath, content ?? "", "utf8");
 
-        console.log("Saving file is done");
         return {
           success: true,
           filePath,
@@ -223,7 +221,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
   });
   // Watch project folder for changes
   function watchProjectDirectory(folderPath: string) {
-    console.log("watcher run");
     const watcher = watch(
       folderPath,
       { recursive: true },

@@ -9,15 +9,15 @@ import Explorer from "@/components/editor_ui/sidebar/tabs/explorer/Explorer";
 import TabLayout from "@/components/custom/tabs_ui/TabLayout";
 import ConsoleViewer from "@/components/editor_ui/editor/ConsoleViewer";
 import ChatArea from "@/components/editor_ui/ai/ChatArea";
-import { useState } from "react";
+import { memo, useState } from "react";
 import TopBar from "@/components/editor_ui/topbar/topbar";
-import ChatAreaV2 from "@/components/editor_ui/ai/ChatAreaV2";
-const EditorUI = () => {
-  //toggling ai chat area
+
+const EditorUI = memo(() => {
   const [toggleState, setToggleState] = useState<boolean>(false);
   useGlobalKey(() => {
     setToggleState((prev) => !prev);
   });
+  console.log("Rendering: EditorUI.tsx ");
 
   return (
     <div className="flex w-full flex-col h-full">
@@ -49,7 +49,7 @@ const EditorUI = () => {
                 <ResizablePanel>
                   <div className="flex flex-col flex-1 w-full h-full">
                     <div className="flex-1  custom-scrollbar h-full w-full">
-                      <div className="bg-black text-green-400 font-mono p-2 h-full overflow-y-auto">
+                      <div className="bg-black text-green-400  p-2 h-full overflow-y-auto w-full">
                         <ConsoleViewer />
                       </div>
                     </div>
@@ -75,6 +75,7 @@ const EditorUI = () => {
       </div>
     </div>
   );
-};
+});
 
+EditorUI.displayName = "EditorUI";
 export default EditorUI;
