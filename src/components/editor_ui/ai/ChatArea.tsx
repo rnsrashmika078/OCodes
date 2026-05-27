@@ -7,6 +7,7 @@ import {
 } from "@langchain/langgraph-sdk/react";
 import ChatMessages from "./ChatMessage";
 import TextArea from "./TextArea";
+import { removeNodeModulesRecursively } from "@/helper";
 const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
 
@@ -33,10 +34,9 @@ const ChatArea = memo(() => {
 
   // { interrupt, interrupts, messages, submit, isLoading, stop }
   const stream = useStream({
-    // transport,
-    apiUrl: "http://localhost:2024",
-    // apiUrl: "http://localhost:8000/api/chat",
-    assistantId: "agent",
+    transport,
+    // apiUrl: "http://localhost:2024",
+    // assistantId: "agent",
     onCustomEvent: handleCustomEvent,
   });
 
@@ -52,16 +52,6 @@ const ChatArea = memo(() => {
     );
   }, [stream.messages]);
 
-  const removeNodeModulesRecursively = (nodes: Tree[]): Tree[] => {
-    return nodes
-      .filter((node) => node.name !== "node_modules")
-      .map((node) => ({
-        ...node,
-        children: node.children
-          ? removeNodeModulesRecursively(node.children)
-          : undefined,
-      }));
-  };
   useEffect(() => {
     if (!projectTree) return;
     const filter = () => {
@@ -76,7 +66,7 @@ const ChatArea = memo(() => {
     filter();
   }, [projectTree]);
 
-  console.log("Rendering: ChatArea.tsx ");
+
 
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar">

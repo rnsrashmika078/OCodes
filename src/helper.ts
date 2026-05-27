@@ -68,3 +68,13 @@ export async function readProjectFileContent(tree: Tree[]) {
 
   return contentArray;
 }
+ export const removeNodeModulesRecursively = (nodes: Tree[]): Tree[] => {
+    return nodes
+      .filter((node) => node.name !== "node_modules")
+      .map((node) => ({
+        ...node,
+        children: node.children
+          ? removeNodeModulesRecursively(node.children)
+          : undefined,
+      }));
+  };

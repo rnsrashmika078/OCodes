@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Accordian from "@/components/custom/accordian";
-import { ExtendedMessage } from "@/lib/types/type";
+import { ExtendedMessage, Tree } from "@/lib/types/type";
 import {
   extractTextContent,
   isAIMessage,
@@ -8,12 +8,14 @@ import {
   isToolMessage,
 } from "@/utils";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { SubmitOptions } from "node_modules/@langchain/langgraph-sdk/dist/ui/types";
 import type { HITLRequest, HITLResponse } from "langchain";
 // import { useEditor } from "@/lib/zustand/store";
 import { DiCssdeck } from "react-icons/di";
 import MarkDown from "@/components/custom/react_markdown";
+import { useEditor } from "@/lib/zustand/store";
+import { removeNodeModulesRecursively } from "@/helper";
 
 const ChatMessages = memo(
   ({
@@ -39,12 +41,18 @@ const ChatMessages = memo(
     ) => Promise<void>;
   }) => {
     console.log("Rendering: ChatMessages.tsx ");
+    //only for next js 
+    const [filteredTree, setFilteredTree] = useState<Tree[] | undefined>(
+      undefined,
+    );
 
+    console.log("filtered tree from chat messages", filteredTree);
     const hitlRequest = interrupt?.value as HITLRequest | undefined;
     const actionRequests = hitlRequest?.actionRequests ?? [];
     // const reviewConfigs = hitlRequest?.reviewConfigs ?? [];
 
-    // const project = useEditor((store) => store.project);
+    const rootPath = useEditor((store) => store.project?.path);
+    const fileTree = useEditor((store) => store.project?.tree);
 
     // const toolCallResult = useMemo(
     //      return "YES"
@@ -65,49 +73,70 @@ const ChatMessages = memo(
 
       //for javascript
 
-      // await submit({
-      //   interruptResponse: {
-      //     decisions: [{ type: "approve" }],
-      //   },
-      //   threadId: "chat123",
-      // });
+      await submit({
+        interruptResponse: {
+          decisions: [{ type: "approve" }],
+        },
+        threadId: "chat123",
+        rootPath,
+        fileTree: filteredTree,
+      });
 
       //for python
-      const resume: HITLResponse = {
-        decisions: actionRequests.map(() => ({
-          type: "approve",
-        })),
-      };
-      await submit(null, {
-        command: { resume },
-      });
+      // const resume: HITLResponse = {
+      //   decisions: actionRequests.map(() => ({
+      //     type: "approve",
+      //   })),
+      // };
+      // await submit(null, {
+      //   command: { resume },
+      // });
     };
 
     const handleReject = async () => {
       if (!hitlRequest) return;
 
-      // await submit({
-      //   interruptResponse: {
-      //     decisions: [
-      //       {
-      //         type: "reject",
-      //         message: "User reject the approval",
-      //       },
-      //     ],
-      //   },
-      //   threadId: "chat123",
-      // });
-
-      const resume: HITLResponse = {
-        decisions: actionRequests.map(() => ({
-          type: "reject",
-          reason: "The email tone is too aggressive. Please revise.",
-        })),
-      };
-      await submit(null, {
-        command: { resume },
+      await submit({
+        interruptResponse: {
+          decisions: [
+            {
+              type: "reject",
+              message: "User reject the approval",
+            },
+          ],
+        },
+        threadId: "chat123",
+        rootPath,
+        fileTree: filteredTree,
       });
+
+      // const resume: HITLResponse = {
+      //   decisions: actionRequests.map(() => ({
+      //     type: "reject",
+      //     reason: "The email tone is too aggressive. Please revise.",
+      //   })),
+      // };
+      // await submit(null, {
+      //   command: { resume },
+      // });
     };
+
+    //only for next js
+    useEffect(() => {
+      if (!fileTree) return;
+      const filter = () => {
+        if (!fileTree) {
+          setFilteredTree([]);
+          return;
+        }
+        const filterTree = removeNodeModulesRecursively(fileTree);
+        setFilteredTree(filterTree);
+        return filterTree;
+      };
+      filter();
+    }, [fileTree]);
+
+    
     return (
       <>
         {messages.map((msg, messageIndex) => {
