@@ -11,6 +11,8 @@ import ConsoleViewer from "@/components/editor_ui/editor/ConsoleViewer";
 import ChatArea from "@/components/editor_ui/ai/ChatArea";
 import { memo, useState } from "react";
 import TopBar from "@/components/editor_ui/topbar/topbar";
+import ProgressBar from "@/components/custom/progress_bar";
+import FlowExample from "@/components/custom/generative/flow";
 
 const EditorUI = memo(() => {
   const [toggleState, setToggleState] = useState<boolean>(false);
@@ -50,6 +52,8 @@ const EditorUI = memo(() => {
                   <div className="flex flex-col flex-1 w-full h-full">
                     <div className="flex-1  custom-scrollbar h-full w-full">
                       <div className="bg-black text-green-400  p-2 h-full overflow-y-auto w-full">
+                        {/* <ProgressBar /> */}
+                        {/* <FlowExample /> */}
                         <ConsoleViewer />
                       </div>
                     </div>

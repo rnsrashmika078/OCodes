@@ -1,7 +1,6 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 import { GlobalContextType } from "../types/contextTypes";
-import { Conversation } from "../types/type";
-
+import { TThreads } from "../types/type";
 export const GlobalContext = createContext<GlobalContextType | null>(null);
 
 export const GlobalContextProvider = ({
@@ -9,9 +8,9 @@ export const GlobalContextProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [conversation, setConversation] = useState<Conversation[]>([]);
+  const [threads, setThreads] = useState<TThreads[]>([]);
   return (
-    <GlobalContext.Provider value={{ conversation, setConversation }}>
+    <GlobalContext.Provider value={{ threads, setThreads }}>
       {children}
     </GlobalContext.Provider>
   );

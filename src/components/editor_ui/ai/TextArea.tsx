@@ -1,16 +1,27 @@
-import { memo, useRef, useState } from "react";
+import React, { memo, useRef } from "react";
 import { BsPlus } from "react-icons/bs";
-import { MdRecordVoiceOver } from "react-icons/md";
-import { FaArrowUp } from "react-icons/fa6";
-
+import { MdOutlinePostAdd, MdRecordVoiceOver } from "react-icons/md";
+import { FaArrowUp, FaStop } from "react-icons/fa6";
+import { v4 as uuid } from "uuid";
 interface TextArea {
   toggleSidebar?: (state?: boolean) => void;
   handleClick: (search: string) => void;
   searchText: string;
   setSearchText: React.Dispatch<React.SetStateAction<string>>;
+  isStreaming: boolean;
+  stop: () => Promise<void>;
+  startNewThead?: () => void;
 }
 const TextArea = memo(
-  ({ toggleSidebar, handleClick, setSearchText, searchText }: TextArea) => {
+  ({
+    isStreaming,
+    toggleSidebar,
+    handleClick,
+    setSearchText,
+    searchText,
+    stop,
+    startNewThead,
+  }: TextArea) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSearch = (text: string) => {
@@ -32,10 +43,13 @@ const TextArea = memo(
 
     return (
       <div className=" relative flex items-end w-full  bg-[#313131] rounded-2xl shadow-xl">
-        <div className="absolute bottom-2 left-2 flex items-center">
-          <span className="cursor-pointer rounded-full p-1 hover:bg-[#444444] transition-all">
-            <BsPlus color="white" size={28} />
-          </span>
+        <div className="absolute bottom-2 left-2 flex items-center gap-1">
+          <button aria-label="files_attachment">
+            <BsPlus color="white" className="icon" size={24} />
+          </button>
+          <button aria-label="new_thread" onClick={() => startNewThead && startNewThead()}>
+            <MdOutlinePostAdd color="white" className="icon" size={24} />
+          </button>
         </div>
 
         <textarea
@@ -45,21 +59,30 @@ const TextArea = memo(
           onClick={() => toggleSidebar?.(false)}
           placeholder=""
           onChange={(e) => handleSearch(e.target.value)}
-          className=" resize-none custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-10 py-3 pr-12 rounded-2xl focus:outline-none"
+          className=" resize-none custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none"
         />
 
         <div className="relative">
-          {/* Send / Voice */}
-          {searchText ? (
+          {searchText || isStreaming ? (
             <div
-              className="absolute bottom-2 right-2 cursor-pointer p-2 rounded-full bg-white hover:bg-gray-200 transition-all"
-              onClick={() => handleClick(searchText.trim())}
+              className="absolute bottom-0 -translate-y-1/2  right-2  cursor-pointer rounded-full "
+              onClick={() => {
+                if (isStreaming) {
+                  stop();
+                } else {
+                  handleClick(searchText.trim());
+                }
+              }}
             >
-              <FaArrowUp color="black" size={18} strokeWidth={0.5} />
+              {!isStreaming ? (
+                <FaArrowUp color="white" className="icon" size={20} />
+              ) : (
+                <FaStop color="white" className="icon" size={20} />
+              )}
             </div>
           ) : (
-            <div className="absolute bottom-2 right-2 cursor-pointer p-2 rounded-full hover:bg-[#444444] transition-all">
-              <MdRecordVoiceOver color="white" size={20} />
+            <div className="absolute bottom-0  -translate-y-1/2  right-2">
+              <MdRecordVoiceOver color="white" className="icon" size={20} />
             </div>
           )}
         </div>

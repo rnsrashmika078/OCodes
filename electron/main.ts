@@ -8,7 +8,6 @@ import dotenv from "dotenv";
 import { UserPreference } from "./storage";
 import "dotenv/config";
 import { registerFileSystemHandlers } from "./ipcs/index.js";
-import { spawn } from "child_process"; //vite
 import { initTerminal } from "./terminal.js";
 
 createRequire(import.meta.url);

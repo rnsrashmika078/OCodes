@@ -29177,6 +29177,7 @@ function v4(options, buf, offset) {
   return unsafeStringify(rnds);
 }
 function registerFileSystemHandlers(mainWindow) {
+  if (!mainWindow) return;
   let activeWatcher = null;
   ipcMain$1.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
@@ -29198,7 +29199,7 @@ function registerFileSystemHandlers(mainWindow) {
       });
     }
     if (activeWatcher) activeWatcher.close();
-    activeWatcher = watchProjectDirectory(folderPath);
+    activeWatcher = watchProjectDirectory(folderPath, mainWindow);
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
   ipcMain$1.handle("open", async (_event, filePath) => {
@@ -29345,27 +29346,23 @@ function registerFileSystemHandlers(mainWindow) {
     }
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
-  function watchProjectDirectory(folderPath) {
-    const watcher = watch(
-      folderPath,
-      { recursive: true },
-      (event, filename) => {
-        if (!filename) return;
-        const fullPath = require$$1$2.join(folderPath, filename);
-        if (mainWindow) {
-          mainWindow.webContents.send("fs-change", {
-            event,
-            filename,
-            fullPath
-          });
-        }
-      }
-    );
-    watcher.on("error", (err) => {
-      console.error("FS watcher error:", err);
-    });
-    return watcher;
-  }
+}
+function watchProjectDirectory(folderPath, mainWindow) {
+  const watcher = watch(folderPath, { recursive: true }, (event, filename) => {
+    if (!filename) return;
+    const fullPath = require$$1$2.join(folderPath, filename);
+    if (mainWindow) {
+      mainWindow.webContents.send("fs-change", {
+        event,
+        filename,
+        fullPath
+      });
+    }
+  });
+  watcher.on("error", (err) => {
+    console.error("FS watcher error:", err);
+  });
+  return watcher;
 }
 const shell = process.platform === "win32" ? "powershell.exe" : "bash";
 const initTerminal = (win2) => {

@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Tool, TypedToolCall, TypedToolResult } from "ai";
+import { Tool, TypedToolResult } from "ai";
 
-export interface Conversation {
-  messageId: string;
-  chatId: string;
-  title?: string;
-  role: string;
-  message: string;
-  time?: Date;
+export interface TThreads {
+  threadId:string
 }
 export interface AuthUser {
   id: string;

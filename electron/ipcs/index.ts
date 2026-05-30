@@ -1,6 +1,5 @@
 import { ipcMain, dialog } from "electron";
 import { mkdirSync, readdirSync, statSync, watch, writeFileSync } from "fs";
-import { readdir, stat } from "fs/promises";
 import path, { basename, dirname, extname, join } from "path";
 import { readFileSync } from "fs";
 import fs from "fs";
@@ -8,8 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 import { BrowserWindow } from "electron/main";
 //import a project or folder
 export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
+  if (!mainWindow) return;
   let activeWatcher: fs.FSWatcher | null = null;
-
   ipcMain.handle("pick", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
@@ -37,12 +36,9 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
     }
     if (activeWatcher) activeWatcher.close();
 
-    // start new watcher for the project root
-    activeWatcher = watchProjectDirectory(folderPath);
+    activeWatcher = watchProjectDirectory(folderPath, mainWindow);
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
-
-  //open a file
   ipcMain.handle("open", async (_event, filePath: string) => {
     try {
       const content = readFileSync(filePath, "utf-8");
@@ -52,7 +48,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       return null;
     }
   });
-
   ipcMain.handle("create", async (_event, filepath: string, code?: string) => {
     try {
       const filePath = join(filepath);
@@ -76,16 +71,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       return { success: false, error: String(error) };
     }
   });
-
-  ipcMain.handle(
-    "create-file",
-    async (
-      _event,
-      content?: string,
-      filepath?: string,
-      fileName?: string,
-      method?: string,
-    ) => {
+  ipcMain.handle("create-file",async (_event,content?: string,filepath?: string,fileName?: string,method?: string) => {
       try {
         let filePath: string | undefined;
 
@@ -96,14 +82,11 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
 
           filePath = path.join(filepath, fileName);
 
-          // Ensure directory exists
           const dir = dirname(filePath);
           mkdirSync(dir, { recursive: true });
 
-          // Create file silently
           writeFileSync(filePath, content ?? "", "utf8");
         } else {
-          // Use Save Dialog
           const result = await dialog.showSaveDialog({
             title: "Create a new file",
             defaultPath: `${fileName ?? "new-file"}.txt`,
@@ -140,10 +123,7 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       }
     },
   );
-
-  ipcMain.handle(
-    "save-file",
-    async (_event, content?: string, filepath?: string, fileName?: string) => {
+  ipcMain.handle("save-file",async (_event, content?: string, filepath?: string, fileName?: string) => {
       try {
         if (!filepath || !fileName) {
           return { success: false, error: "No path or filename provided" };
@@ -170,7 +150,6 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
       }
     },
   );
-
   ipcMain.handle("create-folder", async (_event, folderPath: string) => {
     try {
       if (!folderPath) {
@@ -219,30 +198,24 @@ export function registerFileSystemHandlers(mainWindow: BrowserWindow | null) {
 
     return { path: folderPath, tree: readDirRecursive(folderPath) };
   });
-  // Watch project folder for changes
-  function watchProjectDirectory(folderPath: string) {
-    const watcher = watch(
-      folderPath,
-      { recursive: true },
-      (event, filename) => {
-        if (!filename) return;
+}
+function watchProjectDirectory(folderPath: string, mainWindow: BrowserWindow) {
+  const watcher = watch(folderPath, { recursive: true }, (event, filename) => {
+    if (!filename) return;
 
-        const fullPath = path.join(folderPath, filename);
-        // send update to renderer
-        if (mainWindow) {
-          mainWindow.webContents.send("fs-change", {
-            event,
-            filename,
-            fullPath,
-          });
-        }
-      },
-    );
+    const fullPath = path.join(folderPath, filename);
+    if (mainWindow) {
+      mainWindow.webContents.send("fs-change", {
+        event,
+        filename,
+        fullPath,
+      });
+    }
+  });
 
-    watcher.on("error", (err) => {
-      console.error("FS watcher error:", err);
-    });
+  watcher.on("error", (err) => {
+    console.error("FS watcher error:", err);
+  });
 
-    return watcher;
-  }
+  return watcher;
 }

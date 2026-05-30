@@ -52,7 +52,7 @@ const TabLayout = memo(({ className }: TabLayout) => {
   //     setActiveFileContent(activeFile?.content!);
   //   }
   // }, [activeFileContent, activeFile]);
-
+console.log("Rendering: TabLayout.tsx ");
   return (
     <div className={` flex flex-col w-full h-full select-none ${className}`}>
       <div className="relative flex flex-col h-full w-full">

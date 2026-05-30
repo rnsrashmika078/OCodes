@@ -1,12 +1,11 @@
 import { BrowserWindow, ipcMain } from "electron";
 import pty from "node-pty";
-import { string } from "zod";
 
 // const shell = process.platform === "win32" ? "cmd.exe" : "bash";
 const shell = process.platform === "win32" ? "powershell.exe" : "bash";
 export const initTerminal = (win: BrowserWindow) => {
-  const policy_powershell =
-    "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned";
+  // const policy_powershell =
+  //   "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned";
   let ptyProcess: pty.IPty | null = null;
 
   ipcMain.on("terminal:cwd", (_, directory) => {

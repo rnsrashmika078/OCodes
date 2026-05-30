@@ -8,6 +8,10 @@ import {
   Tree,
 } from "@/lib/types/type";
 
+type NewThreadType = {
+  threadId: string;
+  isActive: boolean;
+};
 type FileOperation = {
   height: number;
   loading: boolean;
@@ -75,6 +79,8 @@ export const useEditor = create<FileOperation>((set) => ({
   openFiles: [],
   activeFile: null,
 
+  
+
   setHeight: (currentHeight) => set(() => ({ height: currentHeight })),
   setNotification: (notifier) => set(() => ({ notifier })),
   setLoading: (isLoading) => set(() => ({ loading: isLoading })),
@@ -97,6 +103,7 @@ export const useEditor = create<FileOperation>((set) => ({
     set(() => ({
       cwd,
     })),
+
   setExpandedStatus: (id) =>
     set((state) => {
       if (!state.project) return { project: null };

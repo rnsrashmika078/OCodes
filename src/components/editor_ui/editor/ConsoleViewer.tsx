@@ -47,5 +47,6 @@ export default function ConsoleViewer() {
     };
   }, [path]);
 
+  console.log("Rendering: ConsoleViewer.tsx");
   return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
 }

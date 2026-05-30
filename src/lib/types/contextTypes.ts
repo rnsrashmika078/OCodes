@@ -1,6 +1,6 @@
-import { Conversation } from "./type";
+import { TThreads } from "./type";
 
 export type GlobalContextType = {
-  conversation: Conversation[];
-  setConversation: React.Dispatch<React.SetStateAction<Conversation[]>>;
+  threads:TThreads[]
+  setThreads: React.Dispatch<React.SetStateAction<TThreads[]>>;
 };

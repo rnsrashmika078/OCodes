@@ -8,7 +8,7 @@ import {
   isToolMessage,
 } from "@/utils";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { SubmitOptions } from "node_modules/@langchain/langgraph-sdk/dist/ui/types";
 import type { HITLRequest, HITLResponse } from "langchain";
 // import { useEditor } from "@/lib/zustand/store";
@@ -16,23 +16,24 @@ import { DiCssdeck } from "react-icons/di";
 import MarkDown from "@/components/custom/react_markdown";
 import { useEditor } from "@/lib/zustand/store";
 import { removeNodeModulesRecursively } from "@/helper";
+import { FaArrowDown } from "react-icons/fa6";
 
 const ChatMessages = memo(
   ({
-    // stream
     progress,
     messages,
     isLoading,
     interrupt,
     interrupts,
+    // newThreadId,
     submit,
   }: {
     progress: string;
-    // stream: BaseStream<Record<string, unknown>, DefaultToolCall, BagTemplate>;
     messages: ExtendedMessage[];
     isLoading: boolean;
     interrupt: any;
     interrupts: any;
+    // newThreadId: string;
     submit: (
       values: Partial<Record<string, unknown>> | null | undefined,
       options?:
@@ -77,7 +78,7 @@ const ChatMessages = memo(
         },
         threadId: "chat123",
         rootPath,
-        fileTree: filteredTree,
+        // fileTree: filteredTree,
       });
     };
 
@@ -95,7 +96,7 @@ const ChatMessages = memo(
         },
         threadId: "chat123",
         rootPath,
-        fileTree: filteredTree,
+        // fileTree: filteredTree,
       });
     };
 
@@ -113,6 +114,8 @@ const ChatMessages = memo(
       };
       filter();
     }, [fileTree]);
+
+    const scrollRef = useRef<HTMLDivElement | null>(null);
 
     return (
       <>
@@ -142,14 +145,14 @@ const ChatMessages = memo(
                 <div
                   className={`flex w-full ${
                     isHumanMessage(msg)
-                      ? "justify-end "
+                      ? "justify-end"
                       : "justify-start dark:bg-gray-900 text-white "
                   }`}
                 >
                   <div
                     className={`rounded-lg  ${
                       isHumanMessage(msg)
-                        ? "bg-gray-900  dark:bg-gray-100 text-white dark:text-gray-900"
+                        ? "bg-[#444444] rounded-xl  dark:bg-gray-100 text-white dark:text-gray-900"
                         : " w-full dark:bg-gray-900 text-white "
                     }`}
                   >
@@ -247,6 +250,17 @@ const ChatMessages = memo(
             </>
           );
         })}
+        <button
+          onClick={() => {
+            scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+            console.log("value", scrollRef.current?.scrollTop);
+          }}
+          aria-label="scroll down"
+          className="absolute bg-white  rounded-2xl p-2 text-black bottom-28 transition-all hover:scale-110 left-1/2 -translate-x-6"
+        >
+          <FaArrowDown />
+        </button>
+        <div ref={scrollRef}></div>
       </>
     );
   },
