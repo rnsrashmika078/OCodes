@@ -4,10 +4,8 @@ import { Tabfunctions } from "@/lib/util_functions/function";
 
 export const TopBarLayout = memo(
   ({ children }: { children: React.ReactNode }) => {
-    console.log("Rendering: TopBarLayout.tsx ");
-
     return (
-      <div className="text-white flex items-center w-full h-10 bg-black/60 px-4 shadow-md">
+      <div className="text-white flex items-center w-full h-6 bg-black/60 px-1 shadow-md text-xs">
         {children}
       </div>
     );
@@ -18,11 +16,9 @@ TopBarLayout.displayName = "TopBarLayout";
 
 export const Sections = memo(
   ({ children, name }: { children: React.ReactNode; name: string }) => {
-    console.log("Rendering: Sections.tsx ");
-
     return (
       <div className="relative mx-2 group">
-        <button className="flex items-center px-3 py-1 hover:bg-white/20 rounded transition">
+        <button className="flex items-center  hover:bg-white/20 rounded transition">
           {name}
         </button>
 
@@ -43,8 +39,6 @@ export const SectionItems = memo(
   }: {
     children: React.ReactNode;
   } & HTMLAttributes<HTMLDivElement>) => {
-    console.log("Rendering: SectionItems.tsx ");
-
     return (
       <div className="flex flex-col text-sm text-white" {...rest}>
         {React.Children.map(children, (child) => (
@@ -60,11 +54,12 @@ export const SectionItems = memo(
 SectionItems.displayName = "SectionItems";
 
 const TopBar = memo(function TopBar() {
+
+  
   const handleClick = useCallback((name: string) => {
     Tabfunctions(name);
   }, []);
-  console.log("Rendering: TopBar.tsx ");
-
+  ("Top bar re render");
 
   return (
     <TopBarLayout>

@@ -52,7 +52,7 @@
   } */
  
 }
-p {
+/* p {
   color: rgba(255, 255, 255, 0.64);
 }
 h1 {
@@ -63,10 +63,10 @@ h2 {
 }
 header {
   color: rgb(255, 255, 255);
-}
-sub {
+} */
+/* sub {
   color: rgba(255, 255, 255, 0.314);
-}
+} */
 .icon {
   color: white;
   padding: 2px;

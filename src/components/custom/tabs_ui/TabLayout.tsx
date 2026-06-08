@@ -18,7 +18,10 @@ const TabLayout = memo(({ className }: TabLayout) => {
   const activeFile = useEditor((store) => store.activeFile);
 
   useEffect(() => {
-    if (!openFiles) return;
+    if (!openFiles || openFiles.length === 0) {
+      setActiveFile(null);
+      return;
+    }
     const lastFile = openFiles[openFiles.length - 1];
     if (lastFile) {
       const file = {
@@ -33,26 +36,11 @@ const TabLayout = memo(({ className }: TabLayout) => {
     }
   }, [openFiles]);
 
-  useEffect(() => {
-    if (openFiles.length === 0) {
-      setActiveFile(null);
-      return;
-    }
-  }, [openFiles]);
-
   const handleCloseTab = (fileId: string) => {
     setCloseFile(fileId);
   };
 
-  // const [activeFileContent, setActiveFileContent] = useState<string>(
-  //   activeFile?.content ?? "",
-  // );
-  // useEffect(() => {
-  //   if (activeFileContent !== activeFile?.content) {
-  //     setActiveFileContent(activeFile?.content!);
-  //   }
-  // }, [activeFileContent, activeFile]);
-console.log("Rendering: TabLayout.tsx ");
+  // navigator.
   return (
     <div className={` flex flex-col w-full h-full select-none ${className}`}>
       <div className="relative flex flex-col h-full w-full">
@@ -99,7 +87,7 @@ console.log("Rendering: TabLayout.tsx ");
         </div>
         <div className="flex w-full ">
           <Button
-            name="Code Base"
+            name="Source Code"
             onClick={() => setTurn("code")}
             className={`${turn === "code" ? "bg-blue-500" : ""} w-full`}
           />

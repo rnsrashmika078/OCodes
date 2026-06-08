@@ -13,7 +13,7 @@ const AppLayout = () => {
     });
 
     const result = await res.json();
-    console.log("threads ", result.data);
+    console.log("ALL THREADS", result.data);
     setThreads(result.data);
   };
 
@@ -23,11 +23,9 @@ const AppLayout = () => {
 
   return (
     <div className="relative bg-[#232222] flex flex-col h-screen font-custom text-[var(--foreground)] overflow-hidden ">
-      {/* nav bar goes here */}
-      <main className="flex h-screen w-full">
+      <main className="flex h-full w-full">
         <EditorUI />
       </main>
-      {/* footer can be placed here */}
     </div>
   );
 };

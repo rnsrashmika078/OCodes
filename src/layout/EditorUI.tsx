@@ -7,19 +7,15 @@ import {
 import QuickBar from "@/components/editor_ui/sidebar/QuickBar";
 import Explorer from "@/components/editor_ui/sidebar/tabs/explorer/Explorer";
 import TabLayout from "@/components/custom/tabs_ui/TabLayout";
-import ConsoleViewer from "@/components/editor_ui/editor/ConsoleViewer";
 import ChatArea from "@/components/editor_ui/ai/ChatArea";
 import { memo, useState } from "react";
 import TopBar from "@/components/editor_ui/topbar/topbar";
-import ProgressBar from "@/components/custom/progress_bar";
-import FlowExample from "@/components/custom/generative/flow";
-
+import { TerminalView } from "@/components/editor_ui/editor/ConsoleViewer";
 const EditorUI = memo(() => {
   const [toggleState, setToggleState] = useState<boolean>(false);
   useGlobalKey(() => {
     setToggleState((prev) => !prev);
   });
-  console.log("Rendering: EditorUI.tsx ");
 
   return (
     <div className="flex w-full flex-col h-full">
@@ -54,7 +50,7 @@ const EditorUI = memo(() => {
                       <div className="bg-black text-green-400  p-2 h-full overflow-y-auto w-full">
                         {/* <ProgressBar /> */}
                         {/* <FlowExample /> */}
-                        <ConsoleViewer />
+                        <TerminalView />
                       </div>
                     </div>
                   </div>
@@ -65,11 +61,16 @@ const EditorUI = memo(() => {
             {toggleState && (
               <ResizablePanel>
                 <div className="w-full h-full">
-                  <div className="relative w-full h-full">
-                    <div className="absolute w-full h-full custom-scrollbar">
-                      <ChatArea />
-                    </div>{" "}
-                  </div>
+                  <ChatArea />
+                </div>
+              </ResizablePanel>
+            )}
+
+            <ResizableHandle className="bg-gray-600" />
+            {toggleState && (
+              <ResizablePanel defaultSize={20} maxSize={10} minSize={0}>
+                <div className="w-full h-full">
+                  <ChatArea />
                 </div>
               </ResizablePanel>
             )}

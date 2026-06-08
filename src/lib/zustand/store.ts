@@ -8,10 +8,6 @@ import {
   Tree,
 } from "@/lib/types/type";
 
-type NewThreadType = {
-  threadId: string;
-  isActive: boolean;
-};
 type FileOperation = {
   height: number;
   loading: boolean;
@@ -28,6 +24,10 @@ type FileOperation = {
   cwd: string;
 
   projectFileReadings: TProjectRead[];
+  devServer: boolean;
+
+  //dev server link
+  refreshServer: () => void;
 
   setLoading: (isLoading: boolean) => void;
   setHeight: (currentHeight: number) => void;
@@ -72,14 +72,16 @@ export const useEditor = create<FileOperation>((set) => ({
   clickedFileCurrentPath: null,
   projectFileReadings: [],
 
+  //dev server
+  devServer: false,
+  refreshServer: () => set((state) => ({ devServer: !state.devServer })),
+
   //chat related varaibles
 
   //files related variables
   project: null,
   openFiles: [],
   activeFile: null,
-
-  
 
   setHeight: (currentHeight) => set(() => ({ height: currentHeight })),
   setNotification: (notifier) => set(() => ({ notifier })),

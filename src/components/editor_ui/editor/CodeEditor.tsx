@@ -41,7 +41,6 @@ const CodeEditor = () => {
       // if (project) {
       //   setProject(await window.fsmodule.refreshProject(project.path));
       // }
-
     };
 
     saveChanges();
@@ -106,9 +105,9 @@ const CodeEditor = () => {
           }}
         />
       ) : (
-        <div className="h-full flex flex-col justify-center items-center w-full">
-          <header>OCODE</header>
-          <sub>AI based code editor</sub>
+        <div className=" h-full overflow-y-auto w-full p-4 bg-gradient-to-bl from-[#2b2d2e] via-[#414141]  to-[#000000] ">
+          <h1 className="text-4xl font-bold">OCode</h1>
+          <p className="text-2xl font-serif">Your Local Agentic Code Editor</p>
         </div>
       )}
     </div>

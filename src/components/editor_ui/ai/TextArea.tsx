@@ -11,16 +11,22 @@ interface TextArea {
   isStreaming: boolean;
   stop: () => Promise<void>;
   startNewThead?: () => void;
+  onFileUpload?: () => void;
+  actionKey?: string;
+  onkeydown?: (content: string) => void;
 }
 const TextArea = memo(
   ({
     isStreaming,
+    actionKey = "Enter",
     toggleSidebar,
     handleClick,
     setSearchText,
     searchText,
     stop,
     startNewThead,
+    onFileUpload,
+    onkeydown,
   }: TextArea) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,15 +51,30 @@ const TextArea = memo(
       <div className=" relative flex items-end w-full  bg-[#313131] rounded-2xl shadow-xl">
         <div className="absolute bottom-2 left-2 flex items-center gap-1">
           <button aria-label="files_attachment">
-            <BsPlus color="white" className="icon" size={24} />
+            <BsPlus
+              color="white"
+              className="icon"
+              size={24}
+              onClick={() => onFileUpload && onFileUpload()}
+            />
           </button>
-          <button aria-label="new_thread" onClick={() => startNewThead && startNewThead()}>
+          <button
+            aria-label="new_thread"
+            onClick={() => startNewThead && startNewThead()}
+          >
             <MdOutlinePostAdd color="white" className="icon" size={24} />
           </button>
         </div>
 
         <textarea
           ref={textareaRef}
+          onKeyDown={(e) => {
+            if (e.key === actionKey) {
+              if (onkeydown) {
+                onkeydown(searchText.trim());
+              }
+            }
+          }}
           value={searchText}
           rows={1}
           onClick={() => toggleSidebar?.(false)}

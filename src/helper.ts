@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { RefObject } from "react";
 import { Tree } from "./lib/types/type";
 import { TProjectRead } from "./lib/types/type";
 
@@ -68,13 +70,33 @@ export async function readProjectFileContent(tree: Tree[]) {
 
   return contentArray;
 }
- export const removeNodeModulesRecursively = (nodes: Tree[]): Tree[] => {
-    return nodes
-      .filter((node) => node.name !== "node_modules")
-      .map((node) => ({
-        ...node,
-        children: node.children
-          ? removeNodeModulesRecursively(node.children)
-          : undefined,
-      }));
-  };
+export const removeNodeModulesRecursively = (nodes: Tree[]): Tree[] => {
+  return nodes
+    .filter((node) => node.name !== "node_modules")
+    .map((node) => ({
+      ...node,
+      children: node.children
+        ? removeNodeModulesRecursively(node.children)
+        : undefined,
+    }));
+};
+
+export const scrollDown = (scrollRef: RefObject<HTMLDivElement>) => {
+  if (!scrollRef.current) return;
+  scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+};
+
+export const imageConvert = (file: File | undefined) => {
+  if (!file) return;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+  });
+};

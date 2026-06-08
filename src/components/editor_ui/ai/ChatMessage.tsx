@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Accordian from "@/components/custom/accordian";
-import { ExtendedMessage, Tree } from "@/lib/types/type";
+import { ExtendedMessage } from "@/lib/types/type";
 import {
   extractTextContent,
   isAIMessage,
@@ -8,14 +8,13 @@ import {
   isToolMessage,
 } from "@/utils";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef } from "react";
 import { SubmitOptions } from "node_modules/@langchain/langgraph-sdk/dist/ui/types";
-import type { HITLRequest, HITLResponse } from "langchain";
-// import { useEditor } from "@/lib/zustand/store";
+import type { HITLRequest } from "langchain";
 import { DiCssdeck } from "react-icons/di";
 import MarkDown from "@/components/custom/react_markdown";
 import { useEditor } from "@/lib/zustand/store";
-import { removeNodeModulesRecursively } from "@/helper";
+import { scrollDown } from "@/helper";
 import { FaArrowDown } from "react-icons/fa6";
 
 const ChatMessages = memo(
@@ -25,7 +24,7 @@ const ChatMessages = memo(
     isLoading,
     interrupt,
     interrupts,
-    // newThreadId,
+    activeThread,
     submit,
   }: {
     progress: string;
@@ -33,7 +32,7 @@ const ChatMessages = memo(
     isLoading: boolean;
     interrupt: any;
     interrupts: any;
-    // newThreadId: string;
+    activeThread: string | null;
     submit: (
       values: Partial<Record<string, unknown>> | null | undefined,
       options?:
@@ -41,45 +40,36 @@ const ChatMessages = memo(
         | undefined,
     ) => Promise<void>;
   }) => {
-    console.log("Rendering: ChatMessages.tsx ");
-    //only for next js
-    const [filteredTree, setFilteredTree] = useState<Tree[] | undefined>(
-      undefined,
-    );
-
-    console.log("filtered tree from chat messages", filteredTree);
     const hitlRequest = interrupt?.value as HITLRequest | undefined;
-    const actionRequests = hitlRequest?.actionRequests ?? [];
+    const actionRequests = hitlRequest?.actionRequests[0] ?? [];
+    const interrupt_id = interrupt?.id;
     // const reviewConfigs = hitlRequest?.reviewConfigs ?? [];
-
     const rootPath = useEditor((store) => store.project?.path);
-    const fileTree = useEditor((store) => store.project?.tree);
-
-    // const toolCallResult = useMemo(
-    //      return "YES"
-    //   })
-    //   [messages],
-    // )
-
-    const toolResult = useMemo(() => {
-      messages.map((msg) => {
-        if (typeof msg != "object") return null;
-        const tool_call_result = msg.tool_calls;
-        return tool_call_result;
-      });
-    }, [messages]);
 
     const handleApprove = async () => {
       if (!hitlRequest) return;
+      // const actionRequests = hitlRequest?.actionRequests ?? [];
 
-      await submit({
-        interruptResponse: {
-          decisions: [{ type: "approve" }],
+      // if (actionRequests.length === 0) {
+      //   console.warn("No actions to approve");
+      //   return; // STOP HERE
+      // }
+
+      await submit(
+        {
+          // messages: [{ content: "done", role: "human" }],
+          threadId: activeThread,
+          interruptResponse: {
+            decisions: [{ type: "approve", message: "User approved" }],
+          },
+          rootPath,
         },
-        threadId: "chat123",
-        rootPath,
-        // fileTree: filteredTree,
-      });
+        // {
+        //   config: {
+        //     configurable: { thread_id: activeThread },
+        //   },
+        // },
+      );
     };
 
     const handleReject = async () => {
@@ -94,28 +84,17 @@ const ChatMessages = memo(
             },
           ],
         },
-        threadId: "chat123",
+        threadId: activeThread,
         rootPath,
-        // fileTree: filteredTree,
       });
     };
 
-    //only for next js
-    useEffect(() => {
-      if (!fileTree) return;
-      const filter = () => {
-        if (!fileTree) {
-          setFilteredTree([]);
-          return;
-        }
-        const filterTree = removeNodeModulesRecursively(fileTree);
-        setFilteredTree(filterTree);
-        return filterTree;
-      };
-      filter();
-    }, [fileTree]);
-
     const scrollRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+      if (!isLoading) return;
+      scrollDown(scrollRef);
+    }, [isLoading, messages]);
 
     return (
       <>
@@ -139,9 +118,19 @@ const ChatMessages = memo(
           return (
             <>
               <div key={msg.id || messageIndex} className="px-2 py-1 relative">
-                {/* Message */}
-                {/* Loading spinner */}
-
+                {Array.isArray(tool_call_result) &&
+                  !isHumanMessage(msg) &&
+                  !textContent &&
+                  isLoading && (
+                    <div className="flex text-gray-300  gap-1 items-center">
+                      {
+                        <>
+                          <DiCssdeck size={30} className="animate-spin" />
+                          {progress}
+                        </>
+                      }
+                    </div>
+                  )}
                 <div
                   className={`flex w-full ${
                     isHumanMessage(msg)
@@ -168,19 +157,6 @@ const ChatMessages = memo(
                           />
                         )}
                       </Accordian>
-                      {Array.isArray(tool_call_result) &&
-                        !isHumanMessage(msg) &&
-                        !textContent &&
-                        isLoading && (
-                          <div className="flex text-gray-300  gap-1 items-center">
-                            {
-                              <>
-                                <DiCssdeck size={30} className="animate-spin" />
-                                {progress}
-                              </>
-                            }
-                          </div>
-                        )}
                     </div>
 
                     {/* {tool_call} */}
@@ -236,25 +212,32 @@ const ChatMessages = memo(
                         visibility={!!isToolMsg}
                         header={`Tool Result`}
                       >
-                        {/* <MarkDown text={textContent} /> */}
-                        <pre className="whitespace-pre-wrap">{textContent}</pre>
+                        <MarkDown text={textContent} />
+                        {/* <pre className="whitespace-pre-wrap">{textContent}</pre> */}
                       </Accordian>
                     ) : (
                       // final resulted message
+                      <>
+                        {/* // final resulted message */}
+                        {/* <code className="whitespace-pre-wrap">{textContent}</code> */}
 
-                      <MarkDown text={textContent} />
+                        <MarkDown text={textContent} />
+                      </>
                     )}
                   </div>
                 </div>
+                {/* <span className="text-white">
+                  {JSON.stringify(msg.response_metadata)}
+                </span> */}
+                <span className="text-white">
+                  {JSON.stringify(msg.usage_metadata?.input_tokens)}
+                </span>
               </div>
             </>
           );
         })}
         <button
-          onClick={() => {
-            scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-            console.log("value", scrollRef.current?.scrollTop);
-          }}
+          onClick={() => scrollDown(scrollRef)}
           aria-label="scroll down"
           className="absolute bg-white  rounded-2xl p-2 text-black bottom-28 transition-all hover:scale-110 left-1/2 -translate-x-6"
         >

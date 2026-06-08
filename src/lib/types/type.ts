@@ -2,7 +2,7 @@
 import { Tool, TypedToolResult } from "ai";
 
 export interface TThreads {
-  threadId:string
+  thread_id: string;
 }
 export interface AuthUser {
   id: string;
@@ -133,3 +133,11 @@ export type TProjectRead = {
   path: string;
 };
 export interface ExtendedMessage extends LCMessage, TMessage {}
+
+export type TToolEvent = {
+  event: string;
+  name: string;
+  output: {
+    content: string;
+  };
+};

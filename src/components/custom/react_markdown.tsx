@@ -31,13 +31,6 @@ const MarkDown = ({ text }: MarkdownTypes) => {
         strong: ({ children }) => (
           <strong className="font-bold ">{children}</strong>
         ),
-        // em: ({ children }) => (
-        //   <div className="border-l-4 rounded-md px-2 mt-2 bg-textarea">
-        //     <em className="italic text-blue-500">
-        //       {children}
-        //     </em>
-        //   </div>
-        // ),
         table: ({ children }) => (
           <table border={1} className=" mt-5 mb-5">
             {children}
@@ -78,7 +71,10 @@ const MarkDown = ({ text }: MarkdownTypes) => {
           const language = match ? match[1] : "text";
           const isBlock = className?.includes("language-");
           return isBlock ? (
-            <SyntaxHighlighter language={language} style={prismaStyles.vscDarkPlus  }>
+            <SyntaxHighlighter
+              language={language}
+              style={prismaStyles.vscDarkPlus}
+            >
               {String(children)}
             </SyntaxHighlighter>
           ) : (

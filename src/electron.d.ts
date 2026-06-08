@@ -1,4 +1,4 @@
-import { AuthUser, FilePath, Reply } from "./lib/types/type";
+import { AuthUser, FilePath } from "./lib/types/type";
 
 export {};
 

@@ -4,7 +4,6 @@ interface Props {
   children?: React.ReactNode;
 }
 const ToolTip = memo(({ tip, children }: Props) => {
-  console.log("Rendering: Sections.tsx ");
 
   return (
     <div className="relative w-full text-xs font-custom rounded-r-[5px] bg-black p-1 rounded-l-[5px] px-3 border border-gray-500">

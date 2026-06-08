@@ -1,13 +1,15 @@
 import { useEditor } from "@/lib/zustand/store";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import "xterm/css/xterm.css";
-export default function ConsoleViewer() {
+
+export const TerminalView = () => {
   const termRef = useRef<HTMLDivElement | null>(null);
   const termRefInstance = useRef<Terminal | null>(null);
   const path = useEditor((store) => store.project?.path);
+
   useEffect(() => {
     if (!path) return;
     if (!termRef.current) return;
@@ -42,11 +44,12 @@ export default function ConsoleViewer() {
       window.terminal.resize(term.cols, term.rows);
     });
     return () => {
-      cleanup?.();
+      if (cleanup) {
+        cleanup?.();
+      }
       term.dispose();
     };
   }, [path]);
 
-  console.log("Rendering: ConsoleViewer.tsx");
   return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
-}
+};

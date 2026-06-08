@@ -24,7 +24,6 @@ const FileTreeV2 = () => {
   useEffect(() => {
     const unsubscribe = window.electronAPI.onFsChange(async (_event, _data) => {
       if (project?.path) {
-        console.log("FleTreeV2  UseEffect");
         setCurrentPath(project.path);
         setProject(await window.fsmodule.refreshProject(project.path));
       }
@@ -47,7 +46,6 @@ const FileTreeV2 = () => {
     return rebuildTree(sorted);
   }, [project]);
 
-  // console.log("File Tree v2 is rendering..");
   return (
     <div className="text-white w-full">
       {!project ? (

@@ -1,5 +1,6 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { ExtendedMessage, Tree, TThreads } from "@/lib/types/type";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ExtendedMessage, TThreads, TToolEvent } from "@/lib/types/type";
 import { useEditor } from "@/lib/zustand/store";
 import {
   FetchStreamTransport,
@@ -9,7 +10,8 @@ import ChatMessages from "./ChatMessage";
 import TextArea from "./TextArea";
 import { v4 as uuid } from "uuid";
 import { useGlobalContext } from "@/lib/context/GlobalContext";
-import { state } from "happy-dom/lib/PropertySymbol.js";
+import z from "zod/v4";
+import { imageConvert } from "@/helper";
 
 const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
@@ -17,8 +19,11 @@ const ChatArea = memo(() => {
   const { threads } = useGlobalContext();
   const [progress, setProgress] = useState<string>("");
   const projectPath = useEditor((store) => store.project?.path);
+  const refreshServer = useEditor((store) => store.refreshServer);
   const [openNewThread, setOpenNewThread] = useState<boolean>(false);
 
+  const [localThreads, setLocalThreads] = useState<TThreads[]>([]);
+  const [activeThread, setActiveThread] = useState<string | null>(null);
   const handleCustomEvent = useCallback((data: unknown) => {
     setProgress(data as string);
   }, []);
@@ -32,35 +37,102 @@ const ChatArea = memo(() => {
     });
   }, []);
 
-  // { interrupt, interrupts, messages, submit, isLoading, stop }
+  // giving shape to toolEvent
+  const ToolResponseSchema = z.object({
+    command: z.string(),
+  });
+
   const stream = useStream({
-    onThreadId(threadId) {
-      // setTest(threadId);
-      console.log("Thread was changed", threadId);
-    },
     transport,
+    onFinish() {
+      setProgress("");
+    },
+
+    threadId: activeThread,
+    onToolEvent: (toolEvent) => {
+      try {
+        const toolEventData = toolEvent as TToolEvent;
+        if (toolEventData.name === "generalShellTool") {
+          if (toolEventData?.output?.content) {
+            const content = toolEventData?.output?.content;
+            const parsedResult = ToolResponseSchema.safeParse(
+              JSON.parse(content),
+            );
+            if (!parsedResult.success) {
+            }
+            const command = parsedResult.data?.command;
+            window.terminal.send(command ?? "");
+            window.terminal.send("\r");
+            refreshServer();
+          }
+        }
+      } catch (e) {
+        console.log("Error handling tool event", e);
+      }
+    },
+
+    // fetchStateHistory: true,
     // apiUrl: "http://localhost:2024",
     // assistantId: "agent",
     onCustomEvent: handleCustomEvent,
   });
 
-  console.log("History", stream.history);
   const formattedMessage = useMemo(() => {
-    if (openNewThread) return [];
-    return stream.messages.map(
-      (msg) =>
-        ({
-          ...msg,
-          additional_kwargs: msg.additional_kwargs,
-          // invalid_tool_calls: msg.type === "ai" ? msg.invalid_tool_calls : null,
-          // tool_calls: msg.type === "ai" ? msg.tool_calls : null,
-        }) as ExtendedMessage,
-    );
-  }, [openNewThread, stream.messages]);
+    const messages = stream.messages as ExtendedMessage[];
 
-  const [localThreads, setLocalThreads] = useState<TThreads[]>([]);
-  const [activeThread, setActiveThread] = useState<string | null>(null);
+    return messages;
 
+    // // const messages = stream.me
+    // if (openNewThread) return [];
+    // return stream.messages.map(
+    //   (msg) =>
+    //     ({
+    //       ...msg,
+    //       additional_kwargs: msg.additional_kwargs,
+    //       // invalid_tool_calls: msg.type === "ai" ? msg.invalid_tool_calls : null,
+    //       // tool_calls: msg.type === "ai" ? msg.tool_calls : null,
+    //     }) as ExtendedMessage,
+    // );
+  }, [stream.messages]);
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // const [base, setBase] = useState<unknown>("");
+  // const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+
+  //   if (!file) return;
+  //   const base = await imageConvert(file);
+  //   setBase(base);
+  //   console.log("base", base);
+  // };
+
+  const handleSubmit = async (content: string) => {
+    const id = uuid();
+    if (!activeThread) {
+      setActiveThread(id);
+      setLocalThreads((prev) => [...prev, { threadId: id }]);
+      // stream.switchThread(null);
+    }
+    setOpenNewThread(false);
+    try {
+      setSearchText("");
+      await stream.submit(
+        {
+          messages: [{ content, role: "human" }],
+          rootPath: projectPath,
+          threadId: activeThread ?? id,
+        },
+        {
+          config: {
+            configurable: { thread_id: activeThread ?? id },
+          },
+        },
+      );
+    } catch (err) {
+      console.log("err", err);
+    }
+  };
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar text-xs">
       <div className="block  p-5 gap-2 text-white w-full ">
@@ -68,38 +140,58 @@ const ChatArea = memo(() => {
           return (
             <span
               className="border p-2 border-white rounded-xl hover:scale-105 transition-all cursor-pointer"
-              key={t.threadId}
-              onClick={() => {
+              key={t.thread_id}
+              onClick={async () => {
                 setOpenNewThread(true);
-                setActiveThread(t.threadId);
-                stream.switchThread(t.threadId);
+                setActiveThread(t.thread_id);
+
+                try {
+                  await stream.switchThread(t.thread_id);
+                } catch (e) {
+                  //silent the stream undefinde isue..
+                }
               }}
             >
-              {t.threadId}
+              {t.thread_id}
             </span>
           );
         })}
       </div>
       <div className="w-full">
-        {formattedMessage && formattedMessage.length > 0 && (
-          <ChatMessages
-            // stream={stream}
-            progress={progress}
-            // newThreadId={newThreadId.at(-1) ?? ""}
-            isLoading={stream.isLoading}
-            // addToolApprovalResponse={addToolApprovalResponse}
-            messages={formattedMessage}
-            interrupts={stream.interrupts}
-            interrupt={stream.interrupt}
-            submit={stream.submit}
-            // regenerate={regenerate}
-          />
+        {true ? (
+          formattedMessage &&
+          formattedMessage.length > 0 && (
+            <ChatMessages
+              progress={progress}
+              activeThread={activeThread}
+              isLoading={stream.isLoading}
+              messages={formattedMessage}
+              interrupts={stream.interrupts}
+              interrupt={stream.interrupt}
+              submit={stream.submit}
+            />
+          )
+        ) : (
+          <div>THREAD IS LOADINg..PLEASE WAIT </div>
         )}
       </div>
       <div className="p-5 sticky bottom-0">
+        <input
+          ref={inputRef}
+          type="file"
+          // onChange={(e) => handleFileUpload(e)}
+          className=" pointer-events-none hidden"
+        ></input>
         <div className="relative">
           <TextArea
             stop={stream.stop}
+            onFileUpload={() => {
+              if (!inputRef.current) return;
+              inputRef.current.click();
+
+              const files = inputRef.current.files?.[0];
+              console.log("files", files);
+            }}
             startNewThead={() => {
               const id = uuid();
               setActiveThread(id);
@@ -109,23 +201,11 @@ const ChatArea = memo(() => {
             }}
             isStreaming={stream.isLoading}
             searchText={searchText}
-            handleClick={(search) => {
-              const id = uuid();
-              if (!activeThread) {
-                console.log("no thread yet", activeThread);
-                console.log("Initialing new thread", activeThread);
-                setActiveThread(id);
-                setLocalThreads((prev) => [...prev, { threadId: id }]);
-                // stream.switchThread(null);
-              }
-              setOpenNewThread(false);
-
-              stream.submit({
-                messages: [{ content: search, role: "human" }],
-                rootPath: projectPath,
-                threadId: activeThread ?? id,
-              });
-              setSearchText("");
+            handleClick={async (search) => {
+              handleSubmit(search);
+            }}
+            onkeydown={(content) => {
+              handleSubmit(content);
             }}
             setSearchText={setSearchText}
           />
