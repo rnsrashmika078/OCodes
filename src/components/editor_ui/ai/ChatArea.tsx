@@ -77,22 +77,12 @@ const ChatArea = memo(() => {
     onCustomEvent: handleCustomEvent,
   });
 
+  // console.log("interrupt", stream.interrupt);
+  // console.log("interrupts", stream.interrupts);
   const formattedMessage = useMemo(() => {
     const messages = stream.messages as ExtendedMessage[];
 
     return messages;
-
-    // // const messages = stream.me
-    // if (openNewThread) return [];
-    // return stream.messages.map(
-    //   (msg) =>
-    //     ({
-    //       ...msg,
-    //       additional_kwargs: msg.additional_kwargs,
-    //       // invalid_tool_calls: msg.type === "ai" ? msg.invalid_tool_calls : null,
-    //       // tool_calls: msg.type === "ai" ? msg.tool_calls : null,
-    //     }) as ExtendedMessage,
-    // );
   }, [stream.messages]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -111,7 +101,7 @@ const ChatArea = memo(() => {
     const id = uuid();
     if (!activeThread) {
       setActiveThread(id);
-      setLocalThreads((prev) => [...prev, { threadId: id }]);
+      setLocalThreads((prev) => [...prev, { thread_id: id }]);
       // stream.switchThread(null);
     }
     setOpenNewThread(false);
@@ -196,7 +186,7 @@ const ChatArea = memo(() => {
               const id = uuid();
               setActiveThread(id);
               setOpenNewThread(true);
-              setLocalThreads((prev) => [...prev, { threadId: id }]);
+              setLocalThreads((prev) => [...prev, { thread_id: id }]);
               stream.switchThread(null);
             }}
             isStreaming={stream.isLoading}

@@ -9,12 +9,12 @@ const initialNodes = [
   {
     id: "1",
     position: { x: 100, y: 100 },
-    data: { label: "Start Node 🚀" },
+    data: { label: "Start Node " },
   },
   {
     id: "2",
     position: { x: 300, y: 200 },
-    data: { label: "Second Node 🔥" },
+    data: { label: "Second Node " },
   },
 ];
 

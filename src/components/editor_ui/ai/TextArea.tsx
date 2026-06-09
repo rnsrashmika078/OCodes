@@ -1,8 +1,9 @@
-import React, { memo, useRef } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { BsPlus } from "react-icons/bs";
 import { MdOutlinePostAdd, MdRecordVoiceOver } from "react-icons/md";
 import { FaArrowUp, FaStop } from "react-icons/fa6";
-import { v4 as uuid } from "uuid";
+import { ExpandTextArea, fileIcon } from "@/helper";
+import { useEditor } from "@/lib/zustand/store";
 interface TextArea {
   toggleSidebar?: (state?: boolean) => void;
   handleClick: (search: string) => void;
@@ -32,21 +33,13 @@ const TextArea = memo(
 
     const handleSearch = (text: string) => {
       setSearchText(text);
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        const scrollHeight = textareaRef.current.scrollHeight;
-
-        const maxHeight = 200;
-
-        textareaRef.current.style.height =
-          Math.min(scrollHeight, maxHeight) + "px";
-
-        textareaRef.current.style.overflowY =
-          scrollHeight > maxHeight ? "auto" : "hidden";
-      }
+      ExpandTextArea(textareaRef);
     };
+    const openFiles = useEditor((store) => store.openFiles);
 
+    console.log("openfiles", openFiles);
+
+    useEffect(() => {}, [openFiles]);
     return (
       <div className=" relative flex items-end w-full  bg-[#313131] rounded-2xl shadow-xl">
         <div className="absolute bottom-2 left-2 flex items-center gap-1">
@@ -65,12 +58,29 @@ const TextArea = memo(
             <MdOutlinePostAdd color="white" className="icon" size={24} />
           </button>
         </div>
+        {openFiles.length > 0 && (
+          <div className="absolute flex    top-5 left-2 -translate-y-1/2  gap-2 cursor-pointer ">
+            {openFiles.map((file) => {
+              const Icon = fileIcon(file.name);
 
+              return (
+                <div
+                  key={file.id}
+                  className="text-white border rounded-xl px-1 py-1 items-center flex gap-2"
+                >
+                  {Icon && <Icon />}
+                  {file.name}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           onKeyDown={(e) => {
             if (e.key === actionKey) {
               if (onkeydown) {
+                ExpandTextArea(textareaRef, true);
                 onkeydown(searchText.trim());
               }
             }
@@ -80,7 +90,7 @@ const TextArea = memo(
           onClick={() => toggleSidebar?.(false)}
           placeholder=""
           onChange={(e) => handleSearch(e.target.value)}
-          className=" resize-none custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none"
+          className={`resize-none ${openFiles.length > 0 ? "mt-10 " : "mt-0 "}custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none`}
         />
 
         <div className="relative">
@@ -91,6 +101,7 @@ const TextArea = memo(
                 if (isStreaming) {
                   stop();
                 } else {
+                  ExpandTextArea(textareaRef, true);
                   handleClick(searchText.trim());
                 }
               }}

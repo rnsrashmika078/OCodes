@@ -9,7 +9,6 @@ export const initTerminal = (win: BrowserWindow) => {
   let ptyProcess: pty.IPty | null = null;
 
   ipcMain.on("terminal:cwd", (_, directory) => {
-
     if (ptyProcess) {
       ptyProcess.kill();
     }
@@ -33,7 +32,6 @@ export const initTerminal = (win: BrowserWindow) => {
   });
 
   ipcMain.on("terminal:resize", (_, cols, rows) => {
-  
     ptyProcess?.resize(cols, rows);
   });
 };

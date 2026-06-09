@@ -1,5 +1,5 @@
 import { useEditor } from "@/lib/zustand/store";
-import { memo, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
@@ -38,6 +38,17 @@ export const TerminalView = () => {
 
     const cleanup = window.terminal.onData((data) => {
       term.write(data);
+      const text = data.toString();
+
+      if (
+        text.includes("Internal server error") ||
+        text.includes("PARSE_ERROR") ||
+        text.includes("Transform failed")
+      ) {
+        console.log("VITE ERROR FROM TERMINAL");
+        console.log("text", text);
+
+      }
     });
     window.addEventListener("resize", () => {
       fitAddon.fit();

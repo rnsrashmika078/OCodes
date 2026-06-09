@@ -59,7 +59,6 @@ const TopBar = memo(function TopBar() {
   const handleClick = useCallback((name: string) => {
     Tabfunctions(name);
   }, []);
-  ("Top bar re render");
 
   return (
     <TopBarLayout>

@@ -2,6 +2,7 @@
 import { RefObject } from "react";
 import { Tree } from "./lib/types/type";
 import { TProjectRead } from "./lib/types/type";
+import { FaReact } from "react-icons/fa6";
 
 export function RecursiveTreeTraversal(
   nodes: Tree[],
@@ -99,4 +100,26 @@ export const imageConvert = (file: File | undefined) => {
       reject(error);
     };
   });
+};
+
+export const ExpandTextArea = (
+  textareaRef: RefObject<HTMLTextAreaElement>,
+  reset?: boolean,
+) => {
+  if (!textareaRef.current) return;
+  textareaRef.current.style.height = "auto";
+  const scrollHeight = textareaRef.current.scrollHeight;
+  const maxHeight = 200;
+  textareaRef.current.style.height =
+    Math.min(scrollHeight, reset ? 40 : maxHeight) + "px";
+
+  textareaRef.current.style.overflowY =
+    scrollHeight > maxHeight ? "auto" : "hidden";
+};
+export const fileIcon = (filename: string): any => {
+  const ext = filename.split(".").at(-1);
+  switch (ext) {
+    case "tsx":
+      return FaReact;
+  }
 };

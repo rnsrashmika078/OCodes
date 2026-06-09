@@ -1,25 +1,26 @@
+import { useCodingEditor } from "@/lib/zustand/coding_store";
 import { useEditor } from "@/lib/zustand/store";
-import { method } from "happy-dom/lib/PropertySymbol.js";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { BiRefresh } from "react-icons/bi";
-type PreviewProps = {
-  code: string;
-};
 
-const Preview = memo(({ code }: PreviewProps) => {
+const Preview = memo(() => {
   const devServerStatus = useEditor((store) => store.devServer);
   const [isServer, setIsServer] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const setError = useCodingEditor((store) => store.setProjectError);
 
   const checkViteServer = async () => {
     try {
       setRefreshing(true);
       const res = await fetch("http://localhost:5174/", { method: "GET" });
-      if (!res.ok) console.log("cannot connect");
+      if (!res.ok) console.log("cannot connect" , res);
       setIsServer(true);
       setRefreshing(false);
     } catch (err) {
+      console.log("error project", err);
       setIsServer(false);
+      // setError(err)
       setRefreshing(false);
     }
   };
@@ -31,18 +32,6 @@ const Preview = memo(({ code }: PreviewProps) => {
     check();
   }, [devServerStatus]);
 
-  const dummy = `
-  function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>HI THERE</div>
-    </>
-  )
-}
-
-  `;
   return (
     <>
       <button
@@ -56,9 +45,7 @@ const Preview = memo(({ code }: PreviewProps) => {
       {!isServer ? (
         <div className=" h-full overflow-y-auto w-full p-4 bg-gradient-to-bl from-[#000000] via-[#414141]  to-[#000000] ">
           <h1 className="text-1xl">Such a Lovely Day</h1>
-          <p className="text-4xl">
-            Agents are waiting for you!
-          </p>
+          <p className="text-4xl">Agents are waiting for you!</p>
         </div>
       ) : (
         <div className=" h-full overflow-y-auto">
