@@ -122,7 +122,7 @@ const ChatMessages = memo(
                   !isHumanMessage(msg) &&
                   !textContent &&
                   isLoading && (
-                    <div className="flex text-gray-300  gap-1 items-center">
+                    <div className="flex text-gray-300  gap-1 items-center" key={msg.id}>
                       {
                         <>
                           <DiCssdeck size={30} className="animate-spin" />

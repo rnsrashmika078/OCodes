@@ -1,4 +1,3 @@
-import { FaFilePdf } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import * as prismaStyles from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -62,7 +61,7 @@ const MarkDown = ({ text }: MarkdownTypes) => {
         hr: () => <hr className="border-gray-600 my-4" />,
 
         pre: ({ children }) => (
-          <pre className="bg-black/80  rounded-lg overflow-x-auto my-3 text-sm">
+          <pre className="bg-black/80  rounded-lg overflow-x-auto my-2 p-2 text-sm">
             {children}
           </pre>
         ),
@@ -78,7 +77,7 @@ const MarkDown = ({ text }: MarkdownTypes) => {
               {String(children)}
             </SyntaxHighlighter>
           ) : (
-            <code className="bg-gray-800 rounded custom-scrollbar text-red-400 text-sm">
+            <code className="rounded custom-scrollbar  text-sm">
               {children}
             </code>
           );

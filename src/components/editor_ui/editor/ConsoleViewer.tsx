@@ -47,7 +47,6 @@ export const TerminalView = () => {
       ) {
         console.log("VITE ERROR FROM TERMINAL");
         console.log("text", text);
-
       }
     });
     window.addEventListener("resize", () => {
@@ -60,7 +59,7 @@ export const TerminalView = () => {
       }
       term.dispose();
     };
-  }, [path]);
+  }, []);
 
   return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
 };

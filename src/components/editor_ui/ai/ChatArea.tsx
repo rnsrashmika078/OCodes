@@ -49,27 +49,27 @@ const ChatArea = memo(() => {
     },
 
     threadId: activeThread,
-    onToolEvent: (toolEvent) => {
-      try {
-        const toolEventData = toolEvent as TToolEvent;
-        if (toolEventData.name === "generalShellTool") {
-          if (toolEventData?.output?.content) {
-            const content = toolEventData?.output?.content;
-            const parsedResult = ToolResponseSchema.safeParse(
-              JSON.parse(content),
-            );
-            if (!parsedResult.success) {
-            }
-            const command = parsedResult.data?.command;
-            window.terminal.send(command ?? "");
-            window.terminal.send("\r");
-            refreshServer();
-          }
-        }
-      } catch (e) {
-        console.log("Error handling tool event", e);
-      }
-    },
+    // onToolEvent: (toolEvent) => {
+    //   try {
+    //     const toolEventData = toolEvent as TToolEvent;
+    //     if (toolEventData.name === "generalShellTool") {
+    //       if (toolEventData?.output?.content) {
+    //         const content = toolEventData?.output?.content;
+    //         const parsedResult = ToolResponseSchema.safeParse(
+    //           JSON.parse(content),
+    //         );
+    //         if (!parsedResult.success) {
+    //         }
+    //         const command = parsedResult.data?.command;
+    //         window.terminal.send(command ?? "");
+    //         window.terminal.send("\r");
+    //         refreshServer();
+    //       }
+    //     }
+    //   } catch (e) {
+    //     console.log("Error handling tool event", e);
+    //   }
+    // },
 
     // fetchStateHistory: true,
     // apiUrl: "http://localhost:2024",
