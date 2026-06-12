@@ -9,6 +9,7 @@ export const TerminalView = () => {
   const termRef = useRef<HTMLDivElement | null>(null);
   const termRefInstance = useRef<Terminal | null>(null);
   const path = useEditor((store) => store.project?.path);
+  const refresh = useEditor((store) => store.refreshServer);
 
   useEffect(() => {
     if (!path) return;
@@ -38,16 +39,16 @@ export const TerminalView = () => {
 
     const cleanup = window.terminal.onData((data) => {
       term.write(data);
-      const text = data.toString();
+      // const text = data.toString();
 
-      if (
-        text.includes("Internal server error") ||
-        text.includes("PARSE_ERROR") ||
-        text.includes("Transform failed")
-      ) {
-        console.log("VITE ERROR FROM TERMINAL");
-        console.log("text", text);
-      }
+      // if (
+      //   text.includes("Internal server error") ||
+      //   text.includes("PARSE_ERROR") ||
+      //   text.includes("Transform failed")
+      // ) {
+      //   console.log("VITE ERROR FROM TERMINAL");
+      //   console.log("text", text);
+      // }
     });
     window.addEventListener("resize", () => {
       fitAddon.fit();
@@ -59,7 +60,7 @@ export const TerminalView = () => {
       }
       term.dispose();
     };
-  }, []);
+  }, [path, refresh]);
 
   return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
 };

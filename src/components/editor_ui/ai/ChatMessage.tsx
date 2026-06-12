@@ -96,6 +96,7 @@ const ChatMessages = memo(
       scrollDown(scrollRef);
     }, [isLoading, messages]);
 
+    console.log("messages", messages);
     return (
       <>
         {messages.map((msg, messageIndex) => {
@@ -122,7 +123,10 @@ const ChatMessages = memo(
                   !isHumanMessage(msg) &&
                   !textContent &&
                   isLoading && (
-                    <div className="flex text-gray-300  gap-1 items-center" key={msg.id}>
+                    <div
+                      className="flex text-gray-300  gap-1 items-center"
+                      key={msg.id}
+                    >
                       {
                         <>
                           <DiCssdeck size={30} className="animate-spin" />
