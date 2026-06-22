@@ -3,7 +3,6 @@ import { RiCloseFill } from "react-icons/ri";
 import { useEditor } from "@/lib/zustand/store";
 import CodeEditor from "@/components/editor_ui/editor/CodeEditor";
 import Preview from "@/components/editor_ui/editor/Preview";
-
 import Button from "../Button";
 
 interface TabLayout {
@@ -16,6 +15,7 @@ const TabLayout = memo(({ className }: TabLayout) => {
   const setActiveFile = useEditor((store) => store.setActiveFile);
   const openFiles = useEditor((store) => store.openFiles);
   const activeFile = useEditor((store) => store.activeFile);
+  const project = useEditor((store) => store.project);
 
   useEffect(() => {
     if (!openFiles || openFiles.length === 0) {
@@ -35,6 +35,8 @@ const TabLayout = memo(({ className }: TabLayout) => {
       return;
     }
   }, [openFiles]);
+
+  console.log("open files", openFiles);
 
   const handleCloseTab = (fileId: string) => {
     setCloseFile(fileId);
@@ -99,13 +101,7 @@ const TabLayout = memo(({ className }: TabLayout) => {
         </div>
 
         <div className="w-full h-full">
-          {turn === "code" ? (
-            <CodeEditor />
-          ) : (
-            <div className="w-full h-full">
-              <Preview code={activeFile?.content ?? ""} />
-            </div>
-          )}
+          {turn === "code" ? <CodeEditor /> : <Preview />}
         </div>
       </div>
     </div>

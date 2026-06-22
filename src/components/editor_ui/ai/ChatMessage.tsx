@@ -96,7 +96,6 @@ const ChatMessages = memo(
       scrollDown(scrollRef);
     }, [isLoading, messages]);
 
-    console.log("messages", messages);
     return (
       <>
         {messages.map((msg, messageIndex) => {
@@ -216,14 +215,21 @@ const ChatMessages = memo(
                         visibility={!!isToolMsg}
                         header={`Tool Result`}
                       >
-                        <MarkDown text={textContent} />
-                        {/* <pre className="whitespace-pre-wrap">{textContent}</pre> */}
+                        {/* <code className="whitespace-pre-wrap">
+                          {textContent}
+                        </code>
+                         */}
+                        <code style={{ whiteSpace: "pre-wrap" }}>
+                          {textContent}
+                        </code>
                       </Accordian>
                     ) : (
                       // final resulted message
                       <>
                         {/* // final resulted message */}
-                        {/* <code className="whitespace-pre-wrap">{textContent}</code> */}
+                        {/* <code className="whitespace-pre-wrap">
+                          {textContent}
+                        </code> */}
 
                         <MarkDown text={textContent} />
                       </>

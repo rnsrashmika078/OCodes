@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ExtendedMessage, TThreads, TToolEvent } from "@/lib/types/type";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { ExtendedMessage, OpenFile, TThreads, TToolEvent } from "@/lib/types/type";
 import { useEditor } from "@/lib/zustand/store";
 import {
   FetchStreamTransport,
@@ -11,7 +11,7 @@ import TextArea from "./TextArea";
 import { v4 as uuid } from "uuid";
 import { useGlobalContext } from "@/lib/context/GlobalContext";
 import z from "zod/v4";
-import { imageConvert } from "@/helper";
+import { useCodingEditor } from "@/lib/zustand/coding_store";
 
 const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
@@ -53,7 +53,6 @@ const ChatArea = memo(() => {
       try {
         const toolEventData = toolEvent as TToolEvent;
         if (toolEventData.name === "ShellCommandExecutor") {
-          console.log("toolEventData", toolEventData);
           if (toolEventData?.output?.content) {
             const content = toolEventData?.output?.content;
             const parsedResult = ToolResponseSchema.safeParse(
@@ -97,6 +96,8 @@ const ChatArea = memo(() => {
   //   setBase(base);
   //   console.log("base", base);
   // };
+  const error = useCodingEditor((store) => store.projectError);
+  const activeFile = useEditor((store) => store.activeFile);
 
   const handleSubmit = async (content: string) => {
     const id = uuid();
@@ -113,6 +114,8 @@ const ChatArea = memo(() => {
           messages: [{ content, role: "human" }],
           rootPath: projectPath,
           threadId: activeThread ?? id,
+          error,
+          referenceFile: activeFile,
         },
         {
           config: {
@@ -124,9 +127,10 @@ const ChatArea = memo(() => {
       console.log("err", err);
     }
   };
+
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar text-xs">
-      <div className="block  p-5 gap-2 text-white w-full ">
+      {/* <div className="block  p-5 gap-2 text-white w-full ">
         {[...(threads ?? []), ...(localThreads ?? [])].flat().map((t) => {
           return (
             <span
@@ -147,7 +151,7 @@ const ChatArea = memo(() => {
             </span>
           );
         })}
-      </div>
+      </div> */}
       <div className="w-full">
         {true ? (
           formattedMessage &&
@@ -163,7 +167,7 @@ const ChatArea = memo(() => {
             />
           )
         ) : (
-          <div>THREAD IS LOADINg..PLEASE WAIT </div>
+          <div>THREAD IS LOADING...PLEASE WAIT </div>
         )}
       </div>
       <div className="p-5 sticky bottom-0">
@@ -181,7 +185,6 @@ const ChatArea = memo(() => {
               inputRef.current.click();
 
               const files = inputRef.current.files?.[0];
-              console.log("files", files);
             }}
             startNewThead={() => {
               const id = uuid();

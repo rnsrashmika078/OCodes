@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCodingEditor } from "@/lib/zustand/coding_store";
 import { useEditor } from "@/lib/zustand/store";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
@@ -10,6 +12,37 @@ export const TerminalView = () => {
   const termRefInstance = useRef<Terminal | null>(null);
   const path = useEditor((store) => store.project?.path);
   const refresh = useEditor((store) => store.refreshServer);
+
+  const [errors, setErrors] = useState<any>([]);
+  console.log("Global errors", errors);
+
+  // useEffect(() => {
+  //   window.onerror = (msg, src, line, col, err) => {
+  //     console.log("error", err);
+  //     setErrors((prev: any) => [
+  //       ...prev,
+  //       {
+  //         type: "runtime",
+  //         message: msg,
+  //         line,
+  //         col,
+  //       },
+  //     ]);
+  //   };
+
+  //   window.addEventListener("unhandledrejection", (e) => {
+  //     setErrors((prev: any) => [
+  //       ...prev,
+  //       {
+  //         type: "promise",
+  //         message: e.reason?.message || e.reason,
+  //       },
+  //     ]);
+  //   });
+  // }, []);
+
+  const setError = useCodingEditor((store) => store.setProjectError);
+
 
   useEffect(() => {
     if (!path) return;
@@ -39,16 +72,17 @@ export const TerminalView = () => {
 
     const cleanup = window.terminal.onData((data) => {
       term.write(data);
-      // const text = data.toString();
+      const text = data.toString();
 
-      // if (
-      //   text.includes("Internal server error") ||
-      //   text.includes("PARSE_ERROR") ||
-      //   text.includes("Transform failed")
-      // ) {
-      //   console.log("VITE ERROR FROM TERMINAL");
-      //   console.log("text", text);
-      // }
+      if (
+        text.includes("Internal server error") ||
+        text.includes("PARSE_ERROR") ||
+        text.includes("Transform failed")
+      ) {
+        setError(text);
+      } else {
+        // setError(null);
+      }
     });
     window.addEventListener("resize", () => {
       fitAddon.fit();
@@ -60,7 +94,7 @@ export const TerminalView = () => {
       }
       term.dispose();
     };
-  }, [path, refresh]);
+  }, [path, refresh, setError]);
 
   return <div ref={termRef} className="w-full h-full custom-scrollbar-y" />;
 };

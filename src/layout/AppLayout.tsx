@@ -13,7 +13,6 @@ const AppLayout = () => {
     });
 
     const result = await res.json();
-    console.log("ALL THREADS", result.data);
     setThreads(result.data);
   };
 

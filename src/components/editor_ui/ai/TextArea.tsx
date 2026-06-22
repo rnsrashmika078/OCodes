@@ -35,11 +35,8 @@ const TextArea = memo(
       setSearchText(text);
       ExpandTextArea(textareaRef);
     };
-    const openFiles = useEditor((store) => store.openFiles);
+    const activeFile = useEditor((store) => store.activeFile);
 
-    console.log("openfiles", openFiles);
-
-    useEffect(() => {}, [openFiles]);
     return (
       <div className=" relative flex items-end w-full  bg-[#313131] rounded-2xl shadow-xl">
         <div className="absolute bottom-2 left-2 flex items-center gap-1">
@@ -58,7 +55,7 @@ const TextArea = memo(
             <MdOutlinePostAdd color="white" className="icon" size={24} />
           </button>
         </div>
-        {openFiles.length > 0 && (
+        {/* {openFiles.length > 0 && (
           <div className="absolute flex    top-5 left-2 -translate-y-1/2  gap-2 cursor-pointer ">
             {openFiles.map((file) => {
               const Icon = fileIcon(file.name);
@@ -74,7 +71,22 @@ const TextArea = memo(
               );
             })}
           </div>
-        )}
+        )} */}
+        <div className="absolute flex    top-5 left-2 -translate-y-1/2  gap-2 cursor-pointer ">
+          {activeFile
+            ? (() => {
+                const Icon = fileIcon(activeFile.name);
+
+                return (
+                  <div className="text-white border rounded-xl px-1 py-1 items-center flex gap-2">
+                    {Icon && <Icon />}
+                    {activeFile.name}
+                  </div>
+                );
+              })()
+            : null}
+        </div>
+
         <textarea
           ref={textareaRef}
           onKeyDown={(e) => {
@@ -90,7 +102,7 @@ const TextArea = memo(
           onClick={() => toggleSidebar?.(false)}
           placeholder=""
           onChange={(e) => handleSearch(e.target.value)}
-          className={`resize-none ${openFiles.length > 0 ? "mt-10 " : "mt-0 "}custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none`}
+          className={`resize-none ${activeFile ? "mt-10 " : "mt-0 "}custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none`}
         />
 
         <div className="relative">
