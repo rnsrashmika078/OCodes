@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AIMessage } from "@langchain/core/messages";
 
 /**
@@ -159,4 +160,14 @@ export function extractTextContent(content: unknown): string {
 
   // Fallback: convert any other type to string
   return String(content || "");
+}
+
+export function extractToolCalls(toolCall: any) {
+  if (!Array.isArray(toolCall)) return;
+  const calls = toolCall.map((t) => {
+    if (t.args.todos) return t.args.todos;
+    if (t.args) return t.args;
+  });
+
+  return calls;
 }

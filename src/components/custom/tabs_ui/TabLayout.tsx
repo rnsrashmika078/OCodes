@@ -4,6 +4,7 @@ import { useEditor } from "@/lib/zustand/store";
 import CodeEditor from "@/components/editor_ui/editor/CodeEditor";
 import Preview from "@/components/editor_ui/editor/Preview";
 import Button from "../Button";
+import { OpenFile } from "@/lib/types/type";
 
 interface TabLayout {
   className?: string;
@@ -17,24 +18,24 @@ const TabLayout = memo(({ className }: TabLayout) => {
   const activeFile = useEditor((store) => store.activeFile);
   const project = useEditor((store) => store.project);
 
-  useEffect(() => {
-    if (!openFiles || openFiles.length === 0) {
-      setActiveFile(null);
-      return;
-    }
-    const lastFile = openFiles[openFiles.length - 1];
-    if (lastFile) {
-      const file = {
-        id: lastFile?.id,
-        name: lastFile?.name ?? "Untitled " + lastFile.id.slice(0, 2),
-        type: lastFile?.type ?? "",
-        path: lastFile?.path ?? "",
-        content: lastFile?.content,
-      };
-      setActiveFile(file);
-      return;
-    }
-  }, [openFiles]);
+  // useEffect(() => {
+  //   if (!openFiles || openFiles.length === 0) {
+  //     setActiveFile(null);
+  //     return;
+  //   }
+  //   const lastFile = openFiles[openFiles.length - 1];
+  //   if (lastFile) {
+  //     const file = {
+  //       id: lastFile?.id,
+  //       name: lastFile?.name ?? "Untitled " + lastFile.id.slice(0, 2),
+  //       type: lastFile?.type ?? "",
+  //       path: lastFile?.path ?? "",
+  //       content: lastFile?.content,
+  //     };
+  //     setActiveFile(file);
+  //     return;
+  //   }
+  // }, [openFiles, setActiveFile]);
 
   console.log("open files", openFiles);
 
@@ -42,7 +43,18 @@ const TabLayout = memo(({ className }: TabLayout) => {
     setCloseFile(fileId);
   };
 
-  // navigator.
+  const handleSetActiveFile = async (tab: OpenFile) => {
+    const result = await window.fsmodule.openFile(tab.path);
+
+    setActiveFile({
+      id: tab.id ?? "",
+      name: tab?.name ?? "Untitled " + tab.id.slice(0, 2),
+      type: tab?.type ?? "",
+      path: tab?.path ?? "",
+      content: result,
+    });
+  };
+
   return (
     <div className={` flex flex-col w-full h-full select-none ${className}`}>
       <div className="relative flex flex-col h-full w-full">
@@ -52,16 +64,8 @@ const TabLayout = memo(({ className }: TabLayout) => {
           {openFiles?.map((tab, index: number) => (
             <div
               key={index}
-              onClick={async () => {
-                const result = await window.fsmodule.openFile(tab.path);
-
-                setActiveFile({
-                  id: tab.id ?? "",
-                  name: tab?.name ?? "Untitled " + tab.id.slice(0, 2),
-                  type: tab?.type ?? "",
-                  path: tab?.path ?? "",
-                  content: result,
-                });
+              onClick={() => {
+                handleSetActiveFile(tab);
               }}
               className={`border relative border-[#434343]  flex justify-center transition-all duration-300 hover:cursor-pointer select-none  items-center w-1/2 sm:w-1/2 md:w-1/3 lg:w-1/5 xl:w-1/5 hover:bg-[#232222]  ${
                 activeFile && activeFile.id === tab.id
@@ -74,7 +78,6 @@ const TabLayout = memo(({ className }: TabLayout) => {
                   ? tab?.name
                   : "Untitled " + tab.id.slice(0, 2)}
               </p>
-              {/* content */}
 
               <div
                 className="text-white bg-black absolute right-1 px-1 rounded-sm"

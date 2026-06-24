@@ -16,9 +16,11 @@ import MarkDown from "@/components/custom/react_markdown";
 import { useEditor } from "@/lib/zustand/store";
 import { scrollDown } from "@/helper";
 import { FaArrowDown } from "react-icons/fa6";
+import ToolResultDisplay from "./ToolResultDisplay";
 
 const ChatMessages = memo(
   ({
+    customId,
     progress,
     messages,
     isLoading,
@@ -27,7 +29,8 @@ const ChatMessages = memo(
     activeThread,
     submit,
   }: {
-    progress: string;
+    customId: string;
+    progress?: any;
     messages: ExtendedMessage[];
     isLoading: boolean;
     interrupt: any;
@@ -41,20 +44,10 @@ const ChatMessages = memo(
     ) => Promise<void>;
   }) => {
     const hitlRequest = interrupt?.value as HITLRequest | undefined;
-    const actionRequests = hitlRequest?.actionRequests[0] ?? [];
-    const interrupt_id = interrupt?.id;
-    // const reviewConfigs = hitlRequest?.reviewConfigs ?? [];
     const rootPath = useEditor((store) => store.project?.path);
 
     const handleApprove = async () => {
       if (!hitlRequest) return;
-      // const actionRequests = hitlRequest?.actionRequests ?? [];
-
-      // if (actionRequests.length === 0) {
-      //   console.warn("No actions to approve");
-      //   return; // STOP HERE
-      // }
-
       await submit(
         {
           // messages: [{ content: "done", role: "human" }],
@@ -109,31 +102,16 @@ const ChatMessages = memo(
           const isAiMsg = isAIMessage(msg);
           const textContent = extractTextContent(msg.content);
           const reasoningContent = msg.additional_kwargs?.reasoning_content;
-          const tool_call_result = msg.tool_calls;
+          const toolCallResult = msg.tool_calls;
 
-          if (tool_call_result) {
+          if (toolCallResult) {
             toolCallLastIndex = msg.id;
           }
 
           return (
             <>
               <div key={msg.id || messageIndex} className="px-2 py-1 relative">
-                {Array.isArray(tool_call_result) &&
-                  !isHumanMessage(msg) &&
-                  !textContent &&
-                  isLoading && (
-                    <div
-                      className="flex text-gray-300  gap-1 items-center"
-                      key={msg.id}
-                    >
-                      {
-                        <>
-                          <DiCssdeck size={30} className="animate-spin" />
-                          {progress}
-                        </>
-                      }
-                    </div>
-                  )}
+                {/* {msg} */}
                 <div
                   className={`flex w-full ${
                     isHumanMessage(msg)
@@ -148,6 +126,26 @@ const ChatMessages = memo(
                         : " w-full dark:bg-gray-900 text-white "
                     }`}
                   >
+                    {/* progression */}
+                    {progress &&
+                      !isHumanMessage(msg) &&
+                      !textContent &&
+                      isLastMessage &&
+                      isLoading && (
+                        // isLoading && (
+                        <div
+                          className="flex text-gray-300  gap-1 items-center"
+                          key={progress.id}
+                        >
+                          {
+                            <>
+                              <DiCssdeck size={30} className="animate-spin" />
+                              {progress?.message as string}
+                            </>
+                          }
+                        </div>
+                      )}
+
                     {/* Reasoning content */}
                     <div className="">
                       <Accordian
@@ -164,24 +162,30 @@ const ChatMessages = memo(
 
                     {/* {tool_call} */}
                     {toolCallLastIndex === msg.id &&
-                      Array.isArray(tool_call_result) &&
-                      tool_call_result.map((t) => (
-                        <div key={t.id} className="w-full">
-                          <Accordian
-                            visibility={!!tool_call_result}
-                            header={`Tool Call: ${JSON.stringify(t.name)}`}
-                          >
-                            <div className="px-2">
-                              {Object.entries(t.args).map(([key, value]) => (
-                                <tr key={key}>
-                                  <td className="px-2 py-1 font-bold">{key}</td>
-                                  <td className="px-2 py-1">{value}</td>
-                                </tr>
-                              ))}
-                            </div>
-                          </Accordian>
-                        </div>
-                      ))}
+                      Array.isArray(toolCallResult) &&
+                      toolCallResult.map((t) => {
+                        // if (t.name === "write_todos") return;
+                        // return <div key={t.id}>{JSON.stringify(t.args)}</div>;
+                        return (
+                          <div key={t.id} className="w-full">
+                            <Accordian
+                              visibility={!!toolCallResult}
+                              header={`Tool Call: ${JSON.stringify(t.name)}`}
+                            >
+                              <div className="px-2">
+                                {Object.entries(t.args).map(([key, value]) => (
+                                  <tr key={key}>
+                                    <td className="px-2 py-1 font-bold">
+                                      {key}
+                                    </td>
+                                    <td className="px-2 py-1">{value}</td>
+                                  </tr>
+                                ))}
+                              </div>
+                            </Accordian>
+                          </div>
+                        );
+                      })}
 
                     {/* interrupt call  */}
                     {!isHumanMessage(msg) &&
@@ -219,9 +223,8 @@ const ChatMessages = memo(
                           {textContent}
                         </code>
                          */}
-                        <code style={{ whiteSpace: "pre-wrap" }}>
-                          {textContent}
-                        </code>
+                        {/* {textContent} */}
+                        <ToolResultDisplay result={textContent} />
                       </Accordian>
                     ) : (
                       // final resulted message

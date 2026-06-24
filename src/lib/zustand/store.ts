@@ -183,6 +183,7 @@ export const useEditor = create<FileOperation>((set) => ({
   setCloseFile: (fileId) =>
     set((state) => ({
       openFiles: state.openFiles.filter((file) => file.id !== fileId),
+      activeFile: state.activeFile?.id === fileId ? null : state.activeFile,
     })),
   setCreateFile: (file) =>
     set((state) => ({

@@ -93,6 +93,7 @@ type TMessage = {
   additional_kwargs: {
     reasoning_content: string;
   };
+  progress: any;
   tool_call_id: string;
   invalid_tool_calls: [];
   tool_call_chunks: [

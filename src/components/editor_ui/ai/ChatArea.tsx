@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo, useCallback, useMemo, useRef, useState } from "react";
-import { ExtendedMessage, OpenFile, TThreads, TToolEvent } from "@/lib/types/type";
+import { ExtendedMessage, TThreads, TToolEvent } from "@/lib/types/type";
 import { useEditor } from "@/lib/zustand/store";
 import {
   FetchStreamTransport,
@@ -10,22 +10,24 @@ import ChatMessages from "./ChatMessage";
 import TextArea from "./TextArea";
 import { v4 as uuid } from "uuid";
 import { useGlobalContext } from "@/lib/context/GlobalContext";
-import z from "zod/v4";
+import z, { nullable } from "zod/v4";
 import { useCodingEditor } from "@/lib/zustand/coding_store";
 
 const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
 
   const { threads } = useGlobalContext();
-  const [progress, setProgress] = useState<string>("");
+  const [progress, setProgress] = useState<any>(null);
   const projectPath = useEditor((store) => store.project?.path);
   const refreshServer = useEditor((store) => store.refreshServer);
   const [openNewThread, setOpenNewThread] = useState<boolean>(false);
 
   const [localThreads, setLocalThreads] = useState<TThreads[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null);
+
   const handleCustomEvent = useCallback((data: unknown) => {
-    setProgress(data as string);
+    console.log("progress message", data);
+    setProgress(data);
   }, []);
 
   const transport = useMemo(() => {
@@ -37,7 +39,6 @@ const ChatArea = memo(() => {
     });
   }, []);
 
-  // giving shape to toolEvent
   const ToolResponseSchema = z.object({
     command: z.string(),
   });
@@ -45,7 +46,7 @@ const ChatArea = memo(() => {
   const stream = useStream({
     transport,
     onFinish() {
-      setProgress("");
+      // setProgress(null);
     },
 
     threadId: activeThread,
@@ -70,7 +71,6 @@ const ChatArea = memo(() => {
         console.log("Error handling tool event", e);
       }
     },
-
     // fetchStateHistory: true,
     // apiUrl: "http://localhost:2024",
     // assistantId: "agent",
@@ -79,12 +79,12 @@ const ChatArea = memo(() => {
 
   // console.log("interrupt", stream.interrupt);
   // console.log("interrupts", stream.interrupts);
+
   const formattedMessage = useMemo(() => {
     const messages = stream.messages as ExtendedMessage[];
 
     return messages;
   }, [stream.messages]);
-
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // const [base, setBase] = useState<unknown>("");
@@ -99,8 +99,18 @@ const ChatArea = memo(() => {
   const error = useCodingEditor((store) => store.projectError);
   const activeFile = useEditor((store) => store.activeFile);
 
+  const userMsgId = useMemo(() => {
+    const id = stream.messages.map((m) => (m.type === "human" ? m.id : ""))[0];
+    return id;
+  }, [stream.messages]);
+
+  const [messageId, setMessageId] = useState<string>("");
   const handleSubmit = async (content: string) => {
     const id = uuid();
+    const messageId = uuid();
+
+    // console.log("User message id", userMessageId);
+    setMessageId(messageId);
     if (!activeThread) {
       setActiveThread(id);
       setLocalThreads((prev) => [...prev, { thread_id: id }]);
@@ -116,6 +126,7 @@ const ChatArea = memo(() => {
           threadId: activeThread ?? id,
           error,
           referenceFile: activeFile,
+          messageId: messageId,
         },
         {
           config: {
@@ -127,6 +138,9 @@ const ChatArea = memo(() => {
       console.log("err", err);
     }
   };
+
+  // console.log("PROGRESS", stream.toolProgress);
+  console.log("messages", stream.messages);
 
   return (
     <div className="flex flex-col justify-between h-full w-full custom-scrollbar text-xs">
@@ -157,6 +171,7 @@ const ChatArea = memo(() => {
           formattedMessage &&
           formattedMessage.length > 0 && (
             <ChatMessages
+              customId={messageId}
               progress={progress}
               activeThread={activeThread}
               isLoading={stream.isLoading}
