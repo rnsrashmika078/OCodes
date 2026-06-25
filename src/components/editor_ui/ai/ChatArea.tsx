@@ -32,9 +32,8 @@ const ChatArea = memo(() => {
 
   const transport = useMemo(() => {
     return new FetchStreamTransport({
-      // apiUrl: "http://localhost:3000/api/chat",
-      apiUrl: "http://localhost:3000/api/chat",
-      // apiUrl: "http://localhost:2024",
+      apiUrl: "http://localhost:8000/api/stream",
+
       // assistantId: "agent",
     });
   }, []);
@@ -45,36 +44,34 @@ const ChatArea = memo(() => {
 
   const stream = useStream({
     transport,
-    onFinish() {
-      // setProgress(null);
-    },
+    // onFinish() {
+    //   // setProgress(null);
+    // },
 
     threadId: activeThread,
-    onToolEvent: (toolEvent) => {
-      try {
-        const toolEventData = toolEvent as TToolEvent;
-        if (toolEventData.name === "ShellCommandExecutor") {
-          if (toolEventData?.output?.content) {
-            const content = toolEventData?.output?.content;
-            const parsedResult = ToolResponseSchema.safeParse(
-              JSON.parse(content),
-            );
-            if (!parsedResult.success) {
-            }
-            const command = parsedResult.data?.command;
-            window.terminal.send(command ?? "");
-            window.terminal.send("\r");
-            refreshServer();
-          }
-        }
-      } catch (e) {
-        console.log("Error handling tool event", e);
-      }
-    },
+    // onToolEvent: (toolEvent) => {
+    //   try {
+    //     const toolEventData = toolEvent as TToolEvent;
+    //     if (toolEventData.name === "ShellCommandExecutor") {
+    //       if (toolEventData?.output?.content) {
+    //         const content = toolEventData?.output?.content;
+    //         const parsedResult = ToolResponseSchema.safeParse(
+    //           JSON.parse(content),
+    //         );
+    //         if (!parsedResult.success) {
+    //         }
+    //         const command = parsedResult.data?.command;
+    //         window.terminal.send(command ?? "");
+    //         window.terminal.send("\r");
+    //         refreshServer();
+    //       }
+    //     }
+    //   } catch (e) {
+    //     console.log("Error handling tool event", e);
+    //   }
+    // },
     // fetchStateHistory: true,
-    // apiUrl: "http://localhost:2024",
-    // assistantId: "agent",
-    onCustomEvent: handleCustomEvent,
+    // onCustomEvent: handleCustomEvent,
   });
 
   // console.log("interrupt", stream.interrupt);
@@ -99,10 +96,10 @@ const ChatArea = memo(() => {
   const error = useCodingEditor((store) => store.projectError);
   const activeFile = useEditor((store) => store.activeFile);
 
-  const userMsgId = useMemo(() => {
-    const id = stream.messages.map((m) => (m.type === "human" ? m.id : ""))[0];
-    return id;
-  }, [stream.messages]);
+  // const userMsgId = useMemo(() => {
+  //   const id = stream.messages.map((m) => (m.type === "human" ? m.id : ""))[0];
+  //   return id;
+  // }, [stream.messages]);
 
   const [messageId, setMessageId] = useState<string>("");
   const handleSubmit = async (content: string) => {
@@ -119,21 +116,24 @@ const ChatArea = memo(() => {
     setOpenNewThread(false);
     try {
       setSearchText("");
-      await stream.submit(
-        {
-          messages: [{ content, role: "human" }],
-          rootPath: projectPath,
-          threadId: activeThread ?? id,
-          error,
-          referenceFile: activeFile,
-          messageId: messageId,
-        },
-        {
-          config: {
-            configurable: { thread_id: activeThread ?? id },
-          },
-        },
-      );
+      // stream.submit(
+      //   {
+      //     messages: [{ content, role: "human" }],
+      //     // rootPath: projectPath,
+      //     // threadId: activeThread ?? id,
+      //     // error,
+      //     // referenceFile: activeFile,
+      //     // messageId: messageId,
+      //   },
+      //   // {
+      //   //   config: {
+      //   //     configurable: { thread_id: activeThread ?? id },
+      //   //   },
+      //   // },
+      // );
+      stream.submit({
+        messages: [{ type: "human" as const, content }],
+      });
     } catch (err) {
       console.log("err", err);
     }
@@ -171,7 +171,6 @@ const ChatArea = memo(() => {
           formattedMessage &&
           formattedMessage.length > 0 && (
             <ChatMessages
-              customId={messageId}
               progress={progress}
               activeThread={activeThread}
               isLoading={stream.isLoading}

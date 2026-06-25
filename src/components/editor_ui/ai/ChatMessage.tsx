@@ -20,7 +20,6 @@ import ToolResultDisplay from "./ToolResultDisplay";
 
 const ChatMessages = memo(
   ({
-    customId,
     progress,
     messages,
     isLoading,
@@ -29,7 +28,6 @@ const ChatMessages = memo(
     activeThread,
     submit,
   }: {
-    customId: string;
     progress?: any;
     messages: ExtendedMessage[];
     isLoading: boolean;
