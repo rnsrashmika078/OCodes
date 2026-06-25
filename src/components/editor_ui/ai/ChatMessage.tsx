@@ -158,7 +158,7 @@ const ChatMessages = memo(
                       </Accordian>
                     </div>
 
-                    {/* {tool_call} */}
+                    {/* {tool_call}s */}
                     {toolCallLastIndex === msg.id &&
                       Array.isArray(toolCallResult) &&
                       toolCallResult.map((t) => {
