@@ -20,8 +20,7 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const variants = {
-    default:
-      "bg-black/20 text-white font-bold border border-[rgba(1,1,1,1)]",
+    default: "bg-black/20 text-white font-bold border border-[rgba(1,1,1,1)]",
     light: "text-xs bg-white  font-semibold hover:bg-[#dedede] text-black ",
     transparent: `text-white text-xs bg-transparent font-semibold ${
       border ? "border border-gray-400" : ""
@@ -48,7 +47,9 @@ const Button = ({
     right: "justify-end pr-5",
   };
 
-  const style = `flex py-1 relative items-center ${textAlignment[textAlign]} transition-all gap-2 ${radiuses[radius]} ${variants[variant]} ${sizes[size]} ${className}`;
+  
+  // remove: relative
+  const style = `flex py-1  items-center ${textAlignment[textAlign]} transition-all gap-2 ${radiuses[radius]} ${variants[variant]} ${sizes[size]} ${className}`;
   return (
     <button className={`${style}`} {...props}>
       {children}

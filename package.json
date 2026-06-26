@@ -24,6 +24,7 @@
 		"@babel/standalone": "^7.28.4",
 		"@codesandbox/sandpack-react": "^2.20.0",
 		"@google/generative-ai": "^0.24.1",
+		"@hookform/resolvers": "^5.4.0",
 		"@langchain/langgraph-sdk": "^1.9.2",
 		"@langchain/react": "^1.0.1",
 		"@monaco-editor/react": "^4.7.0",
@@ -52,6 +53,7 @@
 		"openai": "^6.15.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
+		"react-hook-form": "^7.80.0",
 		"react-icons": "^5.5.0",
 		"react-live": "^4.1.8",
 		"react-markdown": "^10.1.0",
@@ -67,7 +69,7 @@
 		"xterm": "^5.3.0",
 		"xterm-addon-fit": "^0.8.0",
 		"xterm-addon-web-links": "^0.9.0",
-		"zod": "^4.3.6",
+		"zod": "^4.4.3",
 		"zustand": "^5.0.7"
 	},
 	"devDependencies": {

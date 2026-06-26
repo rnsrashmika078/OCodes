@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo, useCallback, useMemo, useRef, useState } from "react";
-import { ExtendedMessage, OpenFile, TThreads, TToolEvent } from "@/lib/types/type";
+import {
+  ExtendedMessage,
+  OpenFile,
+  TThreads,
+  TToolEvent,
+} from "@/lib/types/type";
 import { useEditor } from "@/lib/zustand/store";
 import {
   FetchStreamTransport,
@@ -12,6 +17,10 @@ import { v4 as uuid } from "uuid";
 import { useGlobalContext } from "@/lib/context/GlobalContext";
 import z from "zod/v4";
 import { useCodingEditor } from "@/lib/zustand/coding_store";
+import { ErrorBoundary } from "@/components/ErrorBoundry";
+import TextAreaV2, { Container } from "./TextAreaV2";
+import Button from "@/components/custom/Button";
+import { ArrowUpIcon } from "@radix-ui/react-icons";
 
 const ChatArea = memo(() => {
   const [searchText, setSearchText] = useState("");
@@ -24,8 +33,8 @@ const ChatArea = memo(() => {
 
   const [localThreads, setLocalThreads] = useState<TThreads[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null);
-  const handleCustomEvent = useCallback((data: unknown) => {
-    setProgress(data as string);
+  const handleCustomEvent = useCallback((data: any) => {
+    setProgress(data.message as string);
   }, []);
 
   const transport = useMemo(() => {
@@ -152,6 +161,7 @@ const ChatArea = memo(() => {
           );
         })}
       </div> */}
+      {/* <ErrorBoundary> */}
       <div className="w-full">
         {true ? (
           formattedMessage &&
@@ -170,6 +180,8 @@ const ChatArea = memo(() => {
           <div>THREAD IS LOADING...PLEASE WAIT </div>
         )}
       </div>
+      {/* </ErrorBoundary> */}
+
       <div className="p-5 sticky bottom-0">
         <input
           ref={inputRef}
@@ -178,7 +190,8 @@ const ChatArea = memo(() => {
           className=" pointer-events-none hidden"
         ></input>
         <div className="relative">
-          <TextArea
+          <TextAreaV2
+            submit={(content) => handleSubmit(content)}
             stop={stream.stop}
             onFileUpload={() => {
               if (!inputRef.current) return;
@@ -202,7 +215,32 @@ const ChatArea = memo(() => {
               handleSubmit(content);
             }}
             setSearchText={setSearchText}
-          />
+          >
+            <Container elementPosition="bottomRight">
+              <Button
+                textAlign="center"
+                size="xs"
+                variant="light"
+                radius="full"
+                type="submit"
+                className=""
+              >
+                <ArrowUpIcon />
+              </Button>
+            </Container>
+            <Container elementPosition="bottomLeft">
+              <Button
+                textAlign="center"
+                size="xs"
+                variant="light"
+                radius="full"
+                type="submit"
+                className=""
+              >
+                <ArrowUpIcon />
+              </Button>
+            </Container>
+          </TextAreaV2>
           <div className="absolute -top-10 -translate-x-1/2 left-1/2">
             {stream.isLoading && (
               <div className=" absolute  flex space-1 -bottom-5 left-1/2 -translate-x-1/2 gap-2 bg-white p-1 rounded-2xl">

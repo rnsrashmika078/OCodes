@@ -64,11 +64,11 @@ const ChatMessages = memo(
           },
           rootPath,
         },
-        // {
-        //   config: {
-        //     configurable: { thread_id: activeThread },
-        //   },
-        // },
+        {
+          config: {
+            configurable: { thread_id: activeThread },
+          },
+        },
       );
     };
 
@@ -115,12 +115,15 @@ const ChatMessages = memo(
             toolCallLastIndex = msg.id;
           }
 
+          console.log("Interrupt", actionRequests);
+          console.log("hitlRequest", hitlRequest);
           return (
             <>
               <div key={msg.id || messageIndex} className="px-2 py-1 relative">
                 {Array.isArray(tool_call_result) &&
                   !isHumanMessage(msg) &&
                   !textContent &&
+                  isLastMessage &&
                   isLoading && (
                     <div
                       className="flex text-gray-300  gap-1 items-center"
