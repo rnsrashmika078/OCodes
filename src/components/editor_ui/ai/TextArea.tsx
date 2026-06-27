@@ -102,7 +102,7 @@ const TextArea = memo(
           onClick={() => toggleSidebar?.(false)}
           placeholder=""
           onChange={(e) => handleSearch(e.target.value)}
-          className={`resize-none ${activeFile ? "mt-10 " : "mt-0 "}custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none`}
+          className={`h-auto resize-none ${activeFile ? "mt-10 " : "mt-0 "}custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-3 pr-12 rounded-2xl focus:outline-none`}
         />
 
         <div className="relative">

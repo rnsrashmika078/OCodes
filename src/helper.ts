@@ -103,7 +103,7 @@ export const imageConvert = (file: File | undefined) => {
 };
 
 export const ExpandTextArea = (
-  textareaRef: RefObject<HTMLTextAreaElement>,
+  textareaRef: RefObject<HTMLTextAreaElement | null>,
   reset?: boolean,
 ) => {
   if (!textareaRef.current) return;

@@ -5,11 +5,13 @@ import {
   FaRunning,
   FaSave,
   FaUndo,
+  FaFolderOpen,
 } from "react-icons/fa";
 import { FaClosedCaptioning, FaFile, FaPaste } from "react-icons/fa6";
 
 export const SubItems = [
   [
+    { name: "Open", icon: FaFolderOpen },
     { name: "New File", icon: FaFile },
     { name: "Save", icon: FaSave },
     { name: "Run", icon: FaRunning },

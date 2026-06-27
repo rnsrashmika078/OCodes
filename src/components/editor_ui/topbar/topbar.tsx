@@ -1,6 +1,7 @@
 import React, { memo, HTMLAttributes, useCallback } from "react";
 import { SubItems } from "@/lib/samples/data";
 import { Tabfunctions } from "@/lib/util_functions/function";
+import { useEditor } from "@/lib/zustand/store";
 
 export const TopBarLayout = memo(
   ({ children }: { children: React.ReactNode }) => {
@@ -53,9 +54,11 @@ export const SectionItems = memo(
 
 SectionItems.displayName = "SectionItems";
 
-const TopBar = memo(function TopBar() {
+const TopBar = memo(() => {
+  const setCWD = useEditor((s) => s.setCurrentWorkingDirectory);
+  const setProject = useEditor((s) => s.setProject);
+  const project = useEditor((s) => s.project);
 
-  
   const handleClick = useCallback((name: string) => {
     Tabfunctions(name);
   }, []);
@@ -69,7 +72,19 @@ const TopBar = memo(function TopBar() {
             <div key={item.name}>
               <div
                 className="flex items-center gap-2"
-                onClick={() => handleClick(item.name)}
+                onClick={async () => {
+                  handleClick(item.name);
+
+                  const result = await window.fsmodule.pick();
+                  setCWD(result.path);
+                  if (!result) return;
+                  const prevProject = project;
+                  if (result.path) {
+                    setProject(result);
+                    return;
+                    setProject(prevProject);
+                  }
+                }}
               >
                 <item.icon /> {item.name}
               </div>

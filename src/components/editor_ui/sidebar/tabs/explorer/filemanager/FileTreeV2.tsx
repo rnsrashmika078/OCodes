@@ -4,7 +4,7 @@ import { Tree } from "@/lib/types/type";
 import { VscNewFile } from "react-icons/vsc";
 import { VscNewFolder } from "react-icons/vsc";
 import { BiRefresh } from "react-icons/bi";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
 import {
   readProjectFileContent,
@@ -12,7 +12,7 @@ import {
   RecursiveTreeTraversal,
 } from "@/helper";
 
-const FileTreeV2 = () => {
+const FileTreeV2 = memo(() => {
   const setProject = useEditor((s) => s.setProject);
   const setCurrentPath = useEditor((s) => s.setClickedFileCurrentPath);
   const setCWD = useEditor((s) => s.setCurrentWorkingDirectory);
@@ -159,6 +159,7 @@ const FileTreeV2 = () => {
       </div>
     </div>
   );
-};
+});
+FileTreeV2.displayName = "FileTreeV2";
 
 export default FileTreeV2;

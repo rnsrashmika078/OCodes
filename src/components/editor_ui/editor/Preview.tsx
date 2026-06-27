@@ -7,7 +7,7 @@ const Preview = memo(() => {
   const devServerStatus = useEditor((store) => store.devServer);
   const [isServer, setIsServer] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [url, setUrl] = useState<string>("http://localhost:5174/");
+  const [url, setUrl] = useState<string>("http://localhost:5174");
 
   const checkViteServer = async () => {
     try {

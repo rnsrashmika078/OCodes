@@ -10,15 +10,16 @@ import {
 
 import { memo, useEffect, useRef } from "react";
 import { SubmitOptions } from "node_modules/@langchain/langgraph-sdk/dist/ui/types";
-import type { HITLRequest } from "langchain";
+import { BaseMessage, HITLRequest } from "langchain";
 import { DiCssdeck } from "react-icons/di";
 import MarkDown from "@/components/custom/react_markdown";
 import { useEditor } from "@/lib/zustand/store";
 import { scrollDown } from "@/helper";
-import { FaArrowDown } from "react-icons/fa6";
+import { MessageWithForkControls } from "./MessageForkController";
 
 const ChatMessages = memo(
   ({
+    stream,
     progress,
     messages,
     isLoading,
@@ -27,6 +28,7 @@ const ChatMessages = memo(
     activeThread,
     submit,
   }: {
+    stream: any;
     progress: string;
     messages: ExtendedMessage[];
     isLoading: boolean;
@@ -41,23 +43,13 @@ const ChatMessages = memo(
     ) => Promise<void>;
   }) => {
     const hitlRequest = interrupt?.value as HITLRequest | undefined;
-    const actionRequests = hitlRequest?.actionRequests[0] ?? [];
-    const interrupt_id = interrupt?.id;
-    // const reviewConfigs = hitlRequest?.reviewConfigs ?? [];
     const rootPath = useEditor((store) => store.project?.path);
 
     const handleApprove = async () => {
       if (!hitlRequest) return;
-      // const actionRequests = hitlRequest?.actionRequests ?? [];
-
-      // if (actionRequests.length === 0) {
-      //   console.warn("No actions to approve");
-      //   return; // STOP HERE
-      // }
 
       await submit(
         {
-          // messages: [{ content: "done", role: "human" }],
           threadId: activeThread,
           interruptResponse: {
             decisions: [{ type: "approve", message: "User approved" }],
@@ -88,7 +80,6 @@ const ChatMessages = memo(
         rootPath,
       });
     };
-
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -114,9 +105,6 @@ const ChatMessages = memo(
           if (tool_call_result) {
             toolCallLastIndex = msg.id;
           }
-
-          console.log("Interrupt", actionRequests);
-          console.log("hitlRequest", hitlRequest);
           return (
             <>
               <div key={msg.id || messageIndex} className="px-2 py-1 relative">
@@ -245,18 +233,21 @@ const ChatMessages = memo(
                 <span className="text-white">
                   {JSON.stringify(msg.usage_metadata?.input_tokens)}
                 </span>
+                {stream && (
+                  <MessageWithForkControls stream={stream} message={msg} />
+                )}
               </div>
             </>
           );
         })}
-        <button
+        {/* <button
           onClick={() => scrollDown(scrollRef)}
           aria-label="scroll down"
-          className="absolute bg-white  rounded-2xl p-2 text-black bottom-28 transition-all hover:scale-110 left-1/2 -translate-x-6"
+          className="relative  bg-white  rounded-2xl p-2 text-black bottom-28 transition-all hover:scale-110 left-1/2 -translate-x-1/2"
         >
           <FaArrowDown />
         </button>
-        <div ref={scrollRef}></div>
+        <div ref={scrollRef}></div> */}
       </>
     );
   },

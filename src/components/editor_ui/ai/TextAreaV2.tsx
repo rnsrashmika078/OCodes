@@ -1,24 +1,18 @@
-import React, { memo, ReactNode, useEffect, useRef } from "react";
+import React, { memo, ReactNode, useCallback, useEffect, useRef } from "react";
 import { BsPlus } from "react-icons/bs";
 import { MdOutlinePostAdd, MdRecordVoiceOver } from "react-icons/md";
 import { FaArrowUp, FaStop } from "react-icons/fa6";
 import { ExpandTextArea, fileIcon } from "@/helper";
 import { useEditor } from "@/lib/zustand/store";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { promptAreaSchema, promptAreaSchemaType } from "@/schema/hook";
+import { useTextAreaContext } from "@/lib/context/TextAreaContext";
 
 interface TextArea {
   toggleSidebar?: (state?: boolean) => void;
-  handleClick: (search: string) => void;
-  searchText: string;
-  setSearchText: React.Dispatch<React.SetStateAction<string>>;
-  isStreaming: boolean;
-  stop: () => Promise<void>;
-  startNewThead?: () => void;
+  handleClick?: (search: string) => void;
   onFileUpload?: () => void;
-  actionKey?: string;
-  onkeydown?: (content: string) => void;
   children: ReactNode;
 
   // new
@@ -26,68 +20,66 @@ interface TextArea {
 }
 const TextAreaV2 = memo(
   ({
-    isStreaming,
-    actionKey = "Enter",
     toggleSidebar,
     handleClick,
-    setSearchText,
-    searchText,
-    stop,
-    startNewThead,
     onFileUpload,
-    onkeydown,
     children,
 
     // new props
     submit,
   }: TextArea) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const { setIsFieldEmpty } = useTextAreaContext();
 
     // const handleSearch = (text: string) => {
     //   setSearchText(text);
     //   ExpandTextArea(textareaRef);
     // };
-    const {
-      register,
-      handleSubmit,
-      getValues,
-      setValue,
-      reset,
-      formState: { errors },
-    } = useForm<promptAreaSchemaType>({
+    const { register, handleSubmit, reset } = useForm<promptAreaSchemaType>({
       resolver: zodResolver(promptAreaSchema),
     });
+
     const activeFile = useEditor((store) => store.activeFile);
+    const openFiles = useEditor((store) => store.openFiles);
     const onSubmit = async (data: promptAreaSchemaType) => {
-      // alert(data.prompt);
+      if (!data.prompt) return;
       submit(data.prompt);
+      reset();
     };
-    console.log("errors", errors);
+
+    const { ref: formRef, ...registerProps } = register("prompt");
+
     return (
-      <div className="flex w-full  bg-[#313131] rounded-2xl shadow-xl">
+      <div className="flex w-full  bg-[#313131] rounded-b-2xl shadow-xl">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex relative w-full"
+          className="flex flex-col relative w-full"
         >
           <textarea
-            {...register("prompt")}
-            // ref={textareaRef}
+            {...registerProps}
+            ref={(el) => {
+              formRef(el);
+              textareaRef.current = el;
+            }}
             onKeyDown={(e) => {
-              if (e.key === actionKey) {
-                if (onkeydown) {
-                  e.preventDefault();
-                  ExpandTextArea(textareaRef, true);
-                  handleSubmit(onSubmit)(e);
-                }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit(onSubmit)(e);
               }
             }}
             rows={1}
+            onChange={(e) => {
+              const value = e.currentTarget.value;
+              ExpandTextArea(textareaRef, false);
+              setIsFieldEmpty(!!value);
+            }}
             onClick={() => toggleSidebar?.(false)}
-            placeholder=""
-            className={`resize-none ${activeFile ? "mt-10" : "mt-0 "} custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-16 py-2.5 pr-12 rounded-2xl focus:outline-none`}
+            placeholder="What's on your mind..."
+            className={`text-start resize-none  ${openFiles.length > 0 ? "mt-8" : "mt-0"} custom-scrollbar bg-transparent w-full text-white placeholder:text-[#b3b1b1] px-2 py-2  focus:outline-none`}
           />
-          {/* <div className="absolute w-fit">{children}</div> */}
-          {children}
+          <div className="p-2 flex justify-between  w-full text-white">
+            {children}
+          </div>
 
           {/* {errors.prompt && <ErrorMessage error={errors.content?.message} />} */}
         </form>
@@ -97,25 +89,3 @@ const TextAreaV2 = memo(
 );
 TextAreaV2.displayName = "TextAreaV2";
 export default TextAreaV2;
-
-interface ContainerProps {
-  children: ReactNode;
-  elementPosition?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
-}
-export const Container = ({
-  elementPosition = "bottomLeft",
-  children,
-}: ContainerProps) => {
-  const itemPosition = {
-    topLeft: "top-0 left-0",
-    topRight: " top-0 right-0",
-    bottomLeft: " bottom-0 left-0",
-    bottomRight: " bottom-0 right-0",
-  };
-
-  return (
-    <div className={`absolute  p-1 w-fit ${itemPosition[elementPosition]}`}>
-      {children}
-    </div>
-  );
-};

@@ -1,6 +1,6 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   name?: string;
-  variant?: "default" | "dark" | "light" | "transparent";
+  variant?: "default" | "dark" | "light" | "transparent" | "open";
   size?: "xs" | "sm" | "md" | "lg";
   radius?: "xs" | "md" | "xl" | "full";
   children?: React.ReactNode;
@@ -21,10 +21,12 @@ const Button = ({
 }: ButtonProps) => {
   const variants = {
     default: "bg-black/20 text-white font-bold border border-[rgba(1,1,1,1)]",
-    light: "text-xs bg-white  font-semibold hover:bg-[#dedede] text-black ",
+    light:
+      "disabled:bg-gray-400 disabled:text-gray-500 text-xs bg-white  font-semibold hover:bg-[#dedede] text-black ",
     transparent: `text-white text-xs bg-transparent font-semibold ${
       border ? "border border-gray-400" : ""
     } `,
+    open: "disabled:text-gray-500 text-xs  font-semibold hover:bg-[#dedede] text-black ",
     dark: "text-white text-xs bg-black  font-semibold hover:bg-[#141414]",
   };
 
@@ -47,7 +49,6 @@ const Button = ({
     right: "justify-end pr-5",
   };
 
-  
   // remove: relative
   const style = `flex py-1  items-center ${textAlignment[textAlign]} transition-all gap-2 ${radiuses[radius]} ${variants[variant]} ${sizes[size]} ${className}`;
   return (

@@ -43,7 +43,6 @@ export const TerminalView = () => {
 
   const setError = useCodingEditor((store) => store.setProjectError);
 
-
   useEffect(() => {
     if (!path) return;
     if (!termRef.current) return;
@@ -63,7 +62,7 @@ export const TerminalView = () => {
     termRefInstance.current = term;
 
     term.open(termRef.current);
-    // fitAddon.fit();
+    fitAddon.fit();
     const webLinksAddon = new WebLinksAddon();
     term.loadAddon(webLinksAddon);
     term.onData((data) => {
@@ -81,7 +80,7 @@ export const TerminalView = () => {
       ) {
         setError(text);
       } else {
-        // setError(null);
+        setError(null);
       }
     });
     window.addEventListener("resize", () => {
@@ -89,9 +88,8 @@ export const TerminalView = () => {
       window.terminal.resize(term.cols, term.rows);
     });
     return () => {
-      if (cleanup) {
-        cleanup?.();
-      }
+      if (!cleanup) return;
+      cleanup();
       term.dispose();
     };
   }, [path, refresh, setError]);

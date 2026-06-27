@@ -31,8 +31,6 @@ const ChatArea = memo(() => {
   const projectPath = useEditor((store) => store.project?.path);
   const refreshServer = useEditor((store) => store.refreshServer);
   const [openNewThread, setOpenNewThread] = useState<boolean>(false);
-  const [connected, setConnected] = useState(true);
-  const [mountKey, setMountKey] = useState(0);
 
   const [localThreads, setLocalThreads] = useState<TThreads[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null);
@@ -52,14 +50,11 @@ const ChatArea = memo(() => {
 
   const stream = useStream({
     transport,
-
     onFinish() {
       setProgress("");
     },
+
     threadId: activeThread,
-    // onThreadId(id) {
-    //   setActiveThread(id);
-    // },
     onToolEvent: (toolEvent) => {
       try {
         const toolEventData = toolEvent as TToolEvent;
@@ -91,16 +86,14 @@ const ChatArea = memo(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // const [base, setBase] = useState<unknown>("");
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
 
-    if (!file) return;
-    console.log("file", file);
-   
-    // const base = await imageConvert(file);
-    // setBase(base);
-    // console.log("base", base);
-  };
+  //   if (!file) return;
+  //   const base = await imageConvert(file);
+  //   setBase(base);
+  //   console.log("base", base);
+  // };
   const error = useCodingEditor((store) => store.projectError);
   const activeFile = useEditor((store) => store.activeFile);
 
@@ -135,30 +128,30 @@ const ChatArea = memo(() => {
   return (
     <TextAreaContextProvider>
       <div className="flex flex-col justify-between h-full w-full custom-scrollbar text-xs">
-        <div className="block  p-5 gap-2 text-white w-full ">
-          {/* {[...(threads ?? []), ...(localThreads ?? [])].flat().map((t) => {
-            return (
-              <span
-                className="border p-2 border-white rounded-xl hover:scale-105 transition-all cursor-pointer"
-                key={t.thread_id}
-                onClick={async () => {
-                  setOpenNewThread(true);
-                  setActiveThread(t.thread_id);
-                  setMountKey((k) => k + 1);
+        {/* <div className="block  p-5 gap-2 text-white w-full ">
+        {[...(threads ?? []), ...(localThreads ?? [])].flat().map((t) => {
+          return (
+            <span
+              className="border p-2 border-white rounded-xl hover:scale-105 transition-all cursor-pointer"
+              key={t.thread_id}
+              onClick={async () => {
+                setOpenNewThread(true);
+                setActiveThread(t.thread_id);
 
-                  try {
-                    await stream.switchThread(t.thread_id);
-                  } catch (e) {
-                    //silent the stream undefinde isue..
-                  }
-                }}
-              >
-                {t.thread_id}
-              </span>
-            );
-          })} */}
-        </div>
-        <div className="w-full justify-between">
+                try {
+                  await stream.switchThread(t.thread_id);
+                } catch (e) {
+                  //silent the stream undefinde isue..
+                }
+              }}
+            >
+              {t.thread_id}
+            </span>
+          );
+        })}
+      </div> */}
+        {/* <ErrorBoundary> */}
+        <div className="w-full">
           {true ? (
             formattedMessage &&
             formattedMessage.length > 0 && (
@@ -183,26 +176,49 @@ const ChatArea = memo(() => {
           <input
             ref={inputRef}
             type="file"
-            onChange={(e) => handleFileUpload(e)}
+            // onChange={(e) => handleFileUpload(e)}
             className=" pointer-events-none hidden"
           ></input>
           <div className="relative">
-            <TextAreaV2 submit={(content) => handleSubmit(content)}>
+            <TextAreaV2
+              submit={(content) => handleSubmit(content)}
+              // stop={stream.stop}
+              // onFileUpload={() => {
+              //   if (!inputRef.current) return;
+              //   inputRef.current.click();
+
+              //   const files = inputRef.current.files?.[0];
+              // }}
+              // startNewThead={() => {
+              //   const id = uuid();
+              //   setActiveThread(id);
+              //   setOpenNewThread(true);
+              //   setLocalThreads((prev) => [...prev, { thread_id: id }]);
+              //   stream.switchThread(null);
+              // }}
+              // isStreaming={stream.isLoading}
+              // searchText={searchText}
+              // handleClick={async (search) => {
+              //   handleSubmit(search);
+              // }}
+              // onkeydown={(content) => {
+              //   handleSubmit(content);
+              // }}
+              // setSearchText={setSearchText}
+            >
               <div className="flex">
                 <button
                   aria-label="files_attachment"
                   className="p-2 icon disabled:text-gray-500 disabled:bg-transparent"
                 >
-                  <BsPlus size={18} onClick={() => inputRef.current?.click()} />
+                  <BsPlus
+                    size={18}
+                    // onClick={() => onFileUpload && onFileUpload()}
+                  />
                 </button>
                 <button
-                  onClick={() => {
-                    const id = uuid();
-                    setOpenNewThread(true);
-                    setLocalThreads((prev) => [...prev, { thread_id: id }]);
-                    setActiveThread(id);
-                  }}
                   aria-label="new_thread"
+                  // onClick={() => startNewThead && startNewThead()}
                   className="p-2 icon disabled:text-gray-500 disabled:bg-transparent"
                 >
                   <MdOutlinePostAdd size={18} />
